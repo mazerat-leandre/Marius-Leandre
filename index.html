@@ -1,9 +1,49 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Marius-Leandre</title>
+  <meta charset="UTF-8">
+  <title>Marius-Leandre</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <h1>Marius-Leandre</h1>
+  <h1>Liste des produits</h1>
+
+  <div id="products"></div>
+
+  <script>
+    const supabaseUrl = 'https://ghgmifhqgqiqignowred.supabase.co';
+    const supabaseKey = 'sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V';
+
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    async function loadProducts() {
+      const { data, error } = await supabase
+        .from('ListeProduit')
+        .select('*');
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      const container = document.getElementById('products');
+      container.innerHTML = '';
+
+      data.forEach(product => {
+        const div = document.createElement('div');
+        div.innerHTML = `
+          <p>
+            <strong>${product.article}</strong> -
+            ${product.modele} -
+            ${product.couleur} -
+            ${product.prix_ha} €
+          </p>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    loadProducts();
+  </script>
 </body>
 </html>
