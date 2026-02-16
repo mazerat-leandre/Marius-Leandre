@@ -1,9 +1,221 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-    <title>Marius-Leandre</title>
+  <meta charset="UTF-8" />
+  <title>Admin - Projet Léandre</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; max-width: 900px; }
+    .row { margin: 8px 0; }
+    label { display:block; font-weight:600; margin-bottom:4px; }
+    input { width: 100%; padding: 8px; }
+    button { padding: 10px 14px; cursor: pointer; margin-right: 8px; }
+    .box { border:1px solid #ddd; padding:16px; border-radius:8px; margin-top:16px; }
+    .error { color:#b00020; }
+    .ok { color:#0a7a0a; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; }
+  </style>
 </head>
 <body>
-    <h1>Marius-Leandre</h1>
+
+  <div class="topbar">
+    <h1>Admin</h1>
+    <div>
+      <a href="index.html">← Retour liste</a>
+      <button id="btnLogout" style="display:none;">Se déconnecter</button>
+    </div>
+  </div>
+
+  <div id="status"></div>
+
+  <!-- Login -->
+  <div id="loginBox" class="box">
+    <h2>Connexion</h2>
+    <div class="row">
+      <label>Email</label>
+      <input id="email" type="email" autocomplete="username" />
+    </div>
+    <div class="row">
+      <label>Mot de passe</label>
+      <input id="password" type="password" autocomplete="current-password" />
+    </div>
+    <button id="btnLogin">Se connecter</button>
+    <div id="loginMsg" class="error"></div>
+  </div>
+
+  <!-- Form produit -->
+  <div id="formBox" class="box" style="display:none;">
+    <h2 id="formTitle">Ajouter un produit</h2>
+
+    <div class="row">
+      <label>Article</label>
+      <input id="article" />
+    </div>
+    <div class="row">
+      <label>Taille</label>
+      <input id="taille" />
+    </div>
+    <div class="row">
+      <label>Modèle</label>
+      <input id="modele" />
+    </div>
+    <div class="row">
+      <label>Couleur</label>
+      <input id="couleur" />
+    </div>
+    <div class="row">
+      <label>Qui</label>
+      <input id="qui" />
+    </div>
+
+    <button id="btnSave">Enregistrer</button>
+    <button id="btnDelete" style="display:none;">Supprimer</button>
+
+    <div id="formMsg"></div>
+  </div>
+
+  <script>
+    const supabaseUrl = "https://ghgmifhqgqiqignowred.supabase.co";
+    const supabaseKey = "sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
+    const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    const qs = new URLSearchParams(location.search);
+    const productId = qs.get("id"); // si présent => édition
+
+    const el = (id) => document.getElementById(id);
+    const setStatus = (html) => el("status").innerHTML = html || "";
+
+    function showLogin() {
+      el("loginBox").style.display = "";
+      el("formBox").style.display = "none";
+      el("btnLogout").style.display = "none";
+      setStatus("");
+    }
+
+    function showForm() {
+      el("loginBox").style.display = "none";
+      el("formBox").style.display = "";
+      el("btnLogout").style.display = "";
+    }
+
+    async function refreshUI() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        showLogin();
+        return;
+      }
+      showForm();
+
+      if (productId) {
+        el("formTitle").textContent = "Modifier le produit #" + productId;
+        el("btnDelete").style.display = "";
+
+        const { data, error } = await supabaseClient
+          .from("ListeProduit")
+          .select("*")
+          .eq("id", productId)
+          .single();
+
+        if (error) {
+          el("formMsg").innerHTML = `<p class="error">Erreur chargement: ${error.message}</p>`;
+          return;
+        }
+
+        el("article").value = data.article ?? "";
+        el("taille").value = data.taille ?? "";
+        el("modele").value = data.modele ?? "";
+        el("couleur").value = data.couleur ?? "";
+        el("qui").value = data.qui ?? "";
+      } else {
+        el("formTitle").textContent = "Ajouter un produit";
+        el("btnDelete").style.display = "none";
+      }
+    }
+
+    el("btnLogin").addEventListener("click", async () => {
+      el("loginMsg").textContent = "";
+      const email = el("email").value.trim();
+      const password = el("password").value;
+
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) {
+        el("loginMsg").textContent = error.message;
+        return;
+      }
+      await refreshUI();
+    });
+
+    el("btnLogout").addEventListener("click", async () => {
+      await supabaseClient.auth.signOut();
+      showLogin();
+    });
+
+    el("btnSave").addEventListener("click", async () => {
+      el("formMsg").innerHTML = "";
+
+      const payload = {
+        article: el("article").value.trim(),
+        taille: el("taille").value.trim(),
+        modele: el("modele").value.trim(),
+        couleur: el("couleur").value.trim(),
+        qui: el("qui").value.trim(),
+      };
+
+      if (!payload.article) {
+        el("formMsg").innerHTML = `<p class="error">Le champ "Article" est obligatoire.</p>`;
+        return;
+      }
+
+      if (productId) {
+        const { error } = await supabaseClient
+          .from("ListeProduit")
+          .update(payload)
+          .eq("id", productId);
+
+        if (error) {
+          el("formMsg").innerHTML = `<p class="error">Erreur update: ${error.message}</p>`;
+          return;
+        }
+        el("formMsg").innerHTML = `<p class="ok">Produit mis à jour.</p>`;
+      } else {
+        const { error } = await supabaseClient
+          .from("ListeProduit")
+          .insert([payload]);
+
+        if (error) {
+          el("formMsg").innerHTML = `<p class="error">Erreur insert: ${error.message}</p>`;
+          return;
+        }
+        el("formMsg").innerHTML = `<p class="ok">Produit ajouté.</p>`;
+        // option : vider le formulaire
+        el("article").value = "";
+        el("taille").value = "";
+        el("modele").value = "";
+        el("couleur").value = "";
+        el("qui").value = "";
+      }
+    });
+
+    el("btnDelete").addEventListener("click", async () => {
+      if (!productId) return;
+      if (!confirm("Supprimer ce produit ?")) return;
+
+      const { error } = await supabaseClient
+        .from("ListeProduit")
+        .delete()
+        .eq("id", productId);
+
+      if (error) {
+        el("formMsg").innerHTML = `<p class="error">Erreur delete: ${error.message}</p>`;
+        return;
+      }
+
+      el("formMsg").innerHTML = `<p class="ok">Produit supprimé.</p>`;
+      setTimeout(() => location.href = "index.html", 600);
+    });
+
+    // Au chargement : si déjà connecté, affiche le formulaire
+    refreshUI();
+  </script>
 </body>
 </html>
