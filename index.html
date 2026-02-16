@@ -5,16 +5,24 @@
   <title>Projet Léandre</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; max-width: 900px; }
-    .box { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-top: 16px; }
-    .row { margin: 10px 0; }
-    label { display:block; font-weight:600; margin-bottom:4px; }
-    input { width: 100%; padding: 10px; box-sizing: border-box; }
-    button { padding: 10px 14px; cursor: pointer; }
-    .error { color: #b00020; }
-    .product { padding: 10px; border-bottom: 1px solid #eee; }
+    body { font-family: Arial, sans-serif; margin: 40px; max-width: 1000px; }
     .topbar { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .box { border: 1px solid #ddd; border-radius: 10px; padding: 18px; margin-top: 16px; }
+    .row { margin: 10px 0; }
+    label { display:block; font-weight:600; margin-bottom:6px; }
+    input { width: 100%; padding: 10px; box-sizing: border-box; }
+    button { padding: 12px 14px; cursor: pointer; border-radius: 10px; border: 1px solid #ccc; background: #f7f7f7; }
+    button.primary { background:#111; color:#fff; border-color:#111; }
+    button.link { border:none; background:transparent; padding:0; color:#0066cc; }
+    button:disabled { opacity: .5; cursor:not-allowed; }
+    .error { color: #b00020; }
     .muted { color:#666; font-size: 0.95em; }
+    .grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .cardbtn { text-align:left; padding:16px; }
+    .cardtitle { font-weight:700; margin-bottom:6px; }
+    .cardsub { color:#666; font-size:0.95em; }
+    .product { padding: 10px; border-bottom: 1px solid #eee; }
+    .toolbar { display:flex; justify-content:space-between; align-items:center; gap: 10px; margin-bottom: 12px; }
   </style>
 </head>
 <body>
@@ -24,6 +32,7 @@
     <button id="btnLogout" style="display:none;">Se déconnecter</button>
   </div>
 
+  <!-- LOGIN -->
   <div id="loginBox" class="box" style="display:none;">
     <h2>Connexion</h2>
     <div class="row">
@@ -34,13 +43,46 @@
       <label>Mot de passe</label>
       <input id="password" type="password" autocomplete="current-password" />
     </div>
-    <button id="btnLogin">Se connecter</button>
+    <button id="btnLogin" class="primary">Se connecter</button>
     <p id="loginMsg" class="error"></p>
     <p class="muted">Accès réservé.</p>
   </div>
 
-  <div id="contentBox" class="box" style="display:none;">
-    <h2>Liste des produits</h2>
+  <!-- ACCUEIL -->
+  <div id="homeBox" class="box" style="display:none;">
+    <h2>Accueil</h2>
+    <p class="muted">Choisis une action :</p>
+
+    <div class="grid">
+      <button id="goList" class="cardbtn primary">
+        <div class="cardtitle">Liste des articles</div>
+        <div class="cardsub">Voir et filtrer tes produits</div>
+      </button>
+
+      <button id="goStats" class="cardbtn" disabled>
+        <div class="cardtitle">Statistiques</div>
+        <div class="cardsub">À venir (ventes, marges, délais…)</div>
+      </button>
+
+      <button id="goAdd" class="cardbtn" disabled>
+        <div class="cardtitle">Ajouter un article</div>
+        <div class="cardsub">À venir (formulaire)</div>
+      </button>
+
+      <button id="goPhotos" class="cardbtn" disabled>
+        <div class="cardtitle">Photos</div>
+        <div class="cardsub">À venir (upload et galerie)</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- LISTE -->
+  <div id="listBox" class="box" style="display:none;">
+    <div class="toolbar">
+      <h2 style="margin:0;">Liste des articles</h2>
+      <button id="backHome">← Retour accueil</button>
+    </div>
+
     <div id="products">Chargement...</div>
   </div>
 
@@ -51,41 +93,52 @@
 
     const el = (id) => document.getElementById(id);
 
-    function showLogin() {
-      el("loginBox").style.display = "";
-      el("contentBox").style.display = "none";
-      el("btnLogout").style.display = "none";
-      el("loginMsg").textContent = "";
-      el("products").innerHTML = "";
+    function hideAll() {
+      el("loginBox").style.display = "none";
+      el("homeBox").style.display = "none";
+      el("listBox").style.display = "none";
     }
 
-    function showContent() {
-      el("loginBox").style.display = "none";
-      el("contentBox").style.display = "";
+    function showLogin() {
+      hideAll();
+      el("btnLogout").style.display = "none";
+      el("loginMsg").textContent = "";
+      el("loginBox").style.display = "";
+    }
+
+    function showHome() {
+      hideAll();
       el("btnLogout").style.display = "";
+      el("homeBox").style.display = "";
+    }
+
+    function showList() {
+      hideAll();
+      el("btnLogout").style.display = "";
+      el("listBox").style.display = "";
     }
 
     async function loadProducts() {
+      el("products").innerHTML = "Chargement...";
+
       const { data, error } = await supabaseClient
         .from("ListeProduit")
         .select("id, article, taille, modele, couleur")
         .order("id", { ascending: true })
         .limit(200);
 
-      const container = el("products");
-
       if (error) {
-        container.innerHTML = `<p class="error">Accès refusé ou erreur: ${error.message}</p>`;
+        el("products").innerHTML = `<p class="error">Erreur: ${error.message}</p>`;
         console.error(error);
         return;
       }
 
       if (!data || data.length === 0) {
-        container.innerHTML = "<p>Aucun produit.</p>";
+        el("products").innerHTML = "<p>Aucun produit.</p>";
         return;
       }
 
-      container.innerHTML = "";
+      el("products").innerHTML = "";
       data.forEach(p => {
         const div = document.createElement("div");
         div.className = "product";
@@ -93,41 +146,48 @@
           <strong>${p.article}</strong><br>
           Taille: ${p.taille || "-"} | Modèle: ${p.modele || "-"} | Couleur: ${p.couleur || "-"}
         `;
-        container.appendChild(div);
+        el("products").appendChild(div);
       });
     }
 
+    // LOGIN
     el("btnLogin").addEventListener("click", async () => {
       el("loginMsg").textContent = "";
-
       const email = el("email").value.trim();
       const password = el("password").value;
 
       const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-
       if (error) {
         el("loginMsg").textContent = error.message;
         return;
       }
+      showHome();
+    });
 
-      showContent();
+    // NAV
+    el("goList").addEventListener("click", async () => {
+      showList();
       await loadProducts();
     });
 
+    el("backHome").addEventListener("click", () => {
+      showHome();
+    });
+
+    // LOGOUT
     el("btnLogout").addEventListener("click", async () => {
       await supabaseClient.auth.signOut();
       showLogin();
     });
 
-    // Au chargement : si déjà connecté, on affiche la liste. Sinon login.
+    // Au chargement : si session -> Accueil, sinon Login
     (async () => {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) {
         showLogin();
         return;
       }
-      showContent();
-      await loadProducts();
+      showHome();
     })();
   </script>
 
