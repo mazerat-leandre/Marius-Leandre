@@ -1,71 +1,135 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Projet Léandre</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-        }
-        h1 {
-            margin-bottom: 20px;
-        }
-        .product {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Projet Léandre</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; max-width: 900px; }
+    .box { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-top: 16px; }
+    .row { margin: 10px 0; }
+    label { display:block; font-weight:600; margin-bottom:4px; }
+    input { width: 100%; padding: 10px; box-sizing: border-box; }
+    button { padding: 10px 14px; cursor: pointer; }
+    .error { color: #b00020; }
+    .product { padding: 10px; border-bottom: 1px solid #eee; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .muted { color:#666; font-size: 0.95em; }
+  </style>
 </head>
 <body>
 
-    <h1>Liste des produits</h1>
+  <div class="topbar">
+    <h1>Projet Léandre</h1>
+    <button id="btnLogout" style="display:none;">Se déconnecter</button>
+  </div>
 
+  <div id="loginBox" class="box" style="display:none;">
+    <h2>Connexion</h2>
+    <div class="row">
+      <label>Email</label>
+      <input id="email" type="email" autocomplete="username" />
+    </div>
+    <div class="row">
+      <label>Mot de passe</label>
+      <input id="password" type="password" autocomplete="current-password" />
+    </div>
+    <button id="btnLogin">Se connecter</button>
+    <p id="loginMsg" class="error"></p>
+    <p class="muted">Accès réservé.</p>
+  </div>
+
+  <div id="contentBox" class="box" style="display:none;">
+    <h2>Liste des produits</h2>
     <div id="products">Chargement...</div>
+  </div>
 
-    <script>
-        const supabaseUrl = "https://ghgmifhqgqiqignowred.supabase.co";
-        const supabaseKey = "sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
+  <script>
+    const supabaseUrl = "https://ghgmifhqgqiqignowred.supabase.co";
+    const supabaseKey = "sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
+    const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+    const el = (id) => document.getElementById(id);
 
-        async function loadProducts() {
-            const { data, error } = await supabaseClient
-                .from("ListeProduit")
-                .select("*")
-                .limit(50);
+    function showLogin() {
+      el("loginBox").style.display = "";
+      el("contentBox").style.display = "none";
+      el("btnLogout").style.display = "none";
+      el("loginMsg").textContent = "";
+      el("products").innerHTML = "";
+    }
 
-            const container = document.getElementById("products");
+    function showContent() {
+      el("loginBox").style.display = "none";
+      el("contentBox").style.display = "";
+      el("btnLogout").style.display = "";
+    }
 
-            if (error) {
-                container.innerHTML = `<p style="color:red;">Erreur Supabase: ${error.message}</p>`;
-                console.error(error);
-                return;
-            }
+    async function loadProducts() {
+      const { data, error } = await supabaseClient
+        .from("ListeProduit")
+        .select("id, article, taille, modele, couleur")
+        .order("id", { ascending: true })
+        .limit(200);
 
-            if (!data || data.length === 0) {
-                container.innerHTML = "<p>Aucun produit trouvé.</p>";
-                return;
-            }
+      const container = el("products");
 
-            container.innerHTML = "";
+      if (error) {
+        container.innerHTML = `<p class="error">Accès refusé ou erreur: ${error.message}</p>`;
+        console.error(error);
+        return;
+      }
 
-            data.forEach(product => {
-                const div = document.createElement("div");
-                div.className = "product";
-                div.innerHTML = `
-                    <strong>${product.article}</strong><br>
-                    Taille: ${product.taille || "-"} |
-                    Modèle: ${product.modele || "-"} |
-                    Couleur: ${product.couleur || "-"}
-                `;
-                container.appendChild(div);
-            });
-        }
+      if (!data || data.length === 0) {
+        container.innerHTML = "<p>Aucun produit.</p>";
+        return;
+      }
 
-        loadProducts();
-    </script>
+      container.innerHTML = "";
+      data.forEach(p => {
+        const div = document.createElement("div");
+        div.className = "product";
+        div.innerHTML = `
+          <strong>${p.article}</strong><br>
+          Taille: ${p.taille || "-"} | Modèle: ${p.modele || "-"} | Couleur: ${p.couleur || "-"}
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    el("btnLogin").addEventListener("click", async () => {
+      el("loginMsg").textContent = "";
+
+      const email = el("email").value.trim();
+      const password = el("password").value;
+
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        el("loginMsg").textContent = error.message;
+        return;
+      }
+
+      showContent();
+      await loadProducts();
+    });
+
+    el("btnLogout").addEventListener("click", async () => {
+      await supabaseClient.auth.signOut();
+      showLogin();
+    });
+
+    // Au chargement : si déjà connecté, on affiche la liste. Sinon login.
+    (async () => {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        showLogin();
+        return;
+      }
+      showContent();
+      await loadProducts();
+    })();
+  </script>
 
 </body>
 </html>
