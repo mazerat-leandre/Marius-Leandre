@@ -1,54 +1,71 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Marius-Leandre</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta charset="UTF-8">
+    <title>Projet Léandre</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        .product {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
 </head>
 <body>
-  <h1>Liste des produits</h1>
 
-  <div id="products"></div>
+    <h1>Liste des produits</h1>
 
-<script>
-  const supabaseUrl = 'https://ghgmifhqgqiqignowred.supabase.co';
-  const supabaseKey = 'sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V';
+    <div id="products">Chargement...</div>
 
-  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    <script>
+        const supabaseUrl = "https://ghgmifhqgqiqignowred.supabase.co";
+        const supabaseKey = "sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
 
-  async function loadProducts() {
-    const { data, error } = await supabase
-      .from('ListeProduit')
-      .select('id,article,modele,couleur')
-      .limit(10);
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    console.log("ERROR:", error);
-    console.log("DATA:", data);
+        async function loadProducts() {
+            const { data, error } = await supabaseClient
+                .from("ListeProduit")
+                .select("*")
+                .limit(50);
 
-    const container = document.getElementById('products');
+            const container = document.getElementById("products");
 
-    if (error) {
-      container.innerHTML = `<p style="color:red;"><b>Erreur Supabase:</b> ${error.message}</p>`;
-      return;
-    }
+            if (error) {
+                container.innerHTML = `<p style="color:red;">Erreur Supabase: ${error.message}</p>`;
+                console.error(error);
+                return;
+            }
 
-    if (!data || data.length === 0) {
-      container.innerHTML = `<p>Aucun produit retourné (data.length = 0).</p>`;
-      return;
-    }
+            if (!data || data.length === 0) {
+                container.innerHTML = "<p>Aucun produit trouvé.</p>";
+                return;
+            }
 
-    container.innerHTML = data
-      .map(p => `<div><b>${p.article}</b> — ${p.modele} — ${p.couleur}</div>`)
-      .join('');
-  }
+            container.innerHTML = "";
 
-  loadProducts();
-</script>
+            data.forEach(product => {
+                const div = document.createElement("div");
+                div.className = "product";
+                div.innerHTML = `
+                    <strong>${product.article}</strong><br>
+                    Taille: ${product.taille || "-"} |
+                    Modèle: ${product.modele || "-"} |
+                    Couleur: ${product.couleur || "-"}
+                `;
+                container.appendChild(div);
+            });
+        }
 
-  
+        loadProducts();
+    </script>
+
 </body>
 </html>
-
-
-
-
