@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Projet Léandre - Articles</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; max-width: 1100px; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .box { border: 1px solid #ddd; border-radius: 10px; padding: 18px; margin-top: 16px; }
+    button { padding: 10px 14px; cursor: pointer; border-radius: 10px; border: 1px solid #ccc; background: #f7f7f7; }
+    .product { padding: 10px; border-bottom: 1px solid #eee; }
+    .muted { color:#666; }
+    .error { color:#b00020; }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <h1>Liste des articles</h1>
+    <div>
+      <button id="btnHome">Accueil</button>
+      <button id="btnLogout">Se déconnecter</button>
+    </div>
+  </div>
+
+  <div class="box">
+    <div id="products">Chargement...</div>
+  </div>
+
+  <script>
+    const supabaseUrl = "https://ghgmifhqgqiqignowred.supabase.co";
+    const supabaseKey = "sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
+    const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    const el = (id) => document.getElementById(id);
+
+    async function ensureAuthOrRedirect() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        location.href = "index.html";
+        return false;
+      }
+      return true;
+    }
+
+    async function loadProducts() {
+      el("products").innerHTML = "Chargement...";
+
+      const { data, error } = await supabaseClient
+        .from("ListeProduit")
+        .select("id, article, taille, modele, couleur")
+        .order("id", { ascending: true })
+        .limit(200);
+
+      if (error) {
+        el("products").innerHTML = `<p class="error">Erreur: ${error.message}</p>`;
+        console.error(error);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        el("products").innerHTML = `<p class="muted">Aucun article.</p>`;
+        return;
+      }
+
+      el("products").innerHTML = "";
+      data.forEach(p => {
+        const div = document.createElement("div");
+        div.className = "product";
+        div.innerHTML = `
+          <strong>${p.article}</strong><br>
+          Taille: ${p.taille || "-"} | Modèle: ${p.modele || "-"} | Couleur: ${p.couleur || "-"}
+        `;
+        el("products").appendChild(div);
+      });
+    }
+
+    document.getElementById("btnHome").addEventListener("click", () => {
+      location.href = "index.html";
+    });
+
+    document.getElementById("btnLogout").addEventListener("click", async () => {
+      await supabaseClient.auth.signOut();
+      location.href = "index.html";
+    });
+
+    (async () => {
+      const ok = await ensureAuthOrRedirect();
+      if (ok) await loadProducts();
+    })();
+  </script>
+</body>
+</html>
