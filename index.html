@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Projet Léandre</title>
+  <title>Projet Léandre - Accueil</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: Arial, sans-serif; margin: 40px; max-width: 1000px; }
@@ -13,7 +13,6 @@
     input { width: 100%; padding: 10px; box-sizing: border-box; }
     button { padding: 12px 14px; cursor: pointer; border-radius: 10px; border: 1px solid #ccc; background: #f7f7f7; }
     button.primary { background:#111; color:#fff; border-color:#111; }
-    button.link { border:none; background:transparent; padding:0; color:#0066cc; }
     button:disabled { opacity: .5; cursor:not-allowed; }
     .error { color: #b00020; }
     .muted { color:#666; font-size: 0.95em; }
@@ -21,8 +20,6 @@
     .cardbtn { text-align:left; padding:16px; }
     .cardtitle { font-weight:700; margin-bottom:6px; }
     .cardsub { color:#666; font-size:0.95em; }
-    .product { padding: 10px; border-bottom: 1px solid #eee; }
-    .toolbar { display:flex; justify-content:space-between; align-items:center; gap: 10px; margin-bottom: 12px; }
   </style>
 </head>
 <body>
@@ -54,36 +51,26 @@
     <p class="muted">Choisis une action :</p>
 
     <div class="grid">
-      <button id="goList" class="cardbtn primary">
+      <button id="goArticles" class="cardbtn primary">
         <div class="cardtitle">Liste des articles</div>
-        <div class="cardsub">Voir et filtrer tes produits</div>
+        <div class="cardsub">Voir et filtrer les produits</div>
       </button>
 
-      <button id="goStats" class="cardbtn" disabled>
+      <button class="cardbtn" disabled>
         <div class="cardtitle">Statistiques</div>
-        <div class="cardsub">À venir (ventes, marges, délais…)</div>
+        <div class="cardsub">À venir</div>
       </button>
 
-      <button id="goAdd" class="cardbtn" disabled>
-        <div class="cardtitle">Ajouter un article</div>
-        <div class="cardsub">À venir (formulaire)</div>
+      <button class="cardbtn" disabled>
+        <div class="cardtitle">Ajouter / Modifier</div>
+        <div class="cardsub">À venir</div>
       </button>
 
-      <button id="goPhotos" class="cardbtn" disabled>
+      <button class="cardbtn" disabled>
         <div class="cardtitle">Photos</div>
-        <div class="cardsub">À venir (upload et galerie)</div>
+        <div class="cardsub">À venir</div>
       </button>
     </div>
-  </div>
-
-  <!-- LISTE -->
-  <div id="listBox" class="box" style="display:none;">
-    <div class="toolbar">
-      <h2 style="margin:0;">Liste des articles</h2>
-      <button id="backHome">← Retour accueil</button>
-    </div>
-
-    <div id="products">Chargement...</div>
   </div>
 
   <script>
@@ -93,64 +80,19 @@
 
     const el = (id) => document.getElementById(id);
 
-    function hideAll() {
-      el("loginBox").style.display = "none";
-      el("homeBox").style.display = "none";
-      el("listBox").style.display = "none";
-    }
-
     function showLogin() {
-      hideAll();
       el("btnLogout").style.display = "none";
       el("loginMsg").textContent = "";
       el("loginBox").style.display = "";
+      el("homeBox").style.display = "none";
     }
 
     function showHome() {
-      hideAll();
       el("btnLogout").style.display = "";
+      el("loginBox").style.display = "none";
       el("homeBox").style.display = "";
     }
 
-    function showList() {
-      hideAll();
-      el("btnLogout").style.display = "";
-      el("listBox").style.display = "";
-    }
-
-    async function loadProducts() {
-      el("products").innerHTML = "Chargement...";
-
-      const { data, error } = await supabaseClient
-        .from("ListeProduit")
-        .select("id, article, taille, modele, couleur")
-        .order("id", { ascending: true })
-        .limit(200);
-
-      if (error) {
-        el("products").innerHTML = `<p class="error">Erreur: ${error.message}</p>`;
-        console.error(error);
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        el("products").innerHTML = "<p>Aucun produit.</p>";
-        return;
-      }
-
-      el("products").innerHTML = "";
-      data.forEach(p => {
-        const div = document.createElement("div");
-        div.className = "product";
-        div.innerHTML = `
-          <strong>${p.article}</strong><br>
-          Taille: ${p.taille || "-"} | Modèle: ${p.modele || "-"} | Couleur: ${p.couleur || "-"}
-        `;
-        el("products").appendChild(div);
-      });
-    }
-
-    // LOGIN
     el("btnLogin").addEventListener("click", async () => {
       el("loginMsg").textContent = "";
       const email = el("email").value.trim();
@@ -164,32 +106,21 @@
       showHome();
     });
 
-    // NAV
-    el("goList").addEventListener("click", async () => {
-      showList();
-      await loadProducts();
-    });
-
-    el("backHome").addEventListener("click", () => {
-      showHome();
-    });
-
-    // LOGOUT
     el("btnLogout").addEventListener("click", async () => {
       await supabaseClient.auth.signOut();
       showLogin();
     });
 
-    // Au chargement : si session -> Accueil, sinon Login
+    el("goArticles").addEventListener("click", () => {
+      location.href = "articles.html";
+    });
+
+    // Au chargement : si session -> accueil, sinon login
     (async () => {
       const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session) {
-        showLogin();
-        return;
-      }
-      showHome();
+      if (!session) showLogin();
+      else showHome();
     })();
   </script>
-
 </body>
 </html>
