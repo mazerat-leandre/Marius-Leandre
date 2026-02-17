@@ -351,95 +351,140 @@
         el("photosGrid").appendChild(card);
       }
     }
+async function compressImage(file, options = {}) {
+  const {
+    maxSize = 1280,      // taille max du plus grand côté
+    quality = 0.75,      // 0.0 à 1.0
+    mimeType = "image/jpeg" // "image/jpeg" ou "image/webp"
+  } = options;
+
+  // Lire le fichier en image
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  const img = await new Promise((resolve, reject) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = reject;
+    i.src = dataUrl;
+  });
+
+  // Calcul ratio
+  let { width, height } = img;
+  const maxDim = Math.max(width, height);
+  if (maxDim > maxSize) {
+    const scale = maxSize / maxDim;
+    width = Math.round(width * scale);
+    height = Math.round(height * scale);
+  }
+
+  // Canvas
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0, width, height);
+
+  // Convertir en Blob compressé
+  const blob = await new Promise((resolve) => {
+    canvas.toBlob((b) => resolve(b), mimeType, quality);
+  });
+
+  if (!blob) throw new Error("Compression impossible (canvas.toBlob null).");
+
+  return blob;
+}
+
+function humanBytes(bytes) {
+  if (!bytes && bytes !== 0) return "";
+  const units = ["B", "KB", "MB", "GB"];
+  let i = 0;
+  let v = bytes;
+  while (v >= 1024 && i < units.length - 1) {
+    v = v / 1024;
+    i++;
+  }
+  return `${v.toFixed(i === 0 ? 0 : 2)} ${units[i]}`;
+}
 
     async function uploadPhoto() {
-      setPhotosError("");
+  setPhotosError("");
 
-      const file = el("photoFile").files?.[0];
-      if (!file) {
-        setPhotosError("Choisis un fichier image.");
-        return;
-      }
+  const file = el("photoFile").files?.[0];
+  if (!file) {
+    setPhotosError("Choisis un fichier image.");
+    return;
+  }
 
-      setPhotosStatus("Upload…");
+  setPhotosStatus("Compression…");
 
-      const ext = safeExtFromName(file.name);
-      const filename = `${Date.now()}_${rand()}.${ext}`;
-      const path = `articles/${recordId}/${filename}`;
+  try {
+    // ⚙️ Réglages : à ajuster selon ton besoin
+    const blob = await compressImage(file, {
+      maxSize: 1280,          // 1280 px (bon compromis)
+      quality: 0.75,          // qualité JPEG
+      mimeType: "image/jpeg"  // jpeg léger et compatible
+    });
 
-      // 1) Upload dans Storage
-      const { error: upErr } = await supabaseClient
-        .storage
-        .from(BUCKET)
-        .upload(path, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
+    // Nom de fichier final
+    const filename = `${Date.now()}_${Math.random().toString(16).slice(2)}.jpg`;
+    const path = `articles/${recordId}/${filename}`;
 
-      if (upErr) {
-        setPhotosStatus("");
-        setPhotosError("Erreur upload : " + upErr.message);
-        console.error(upErr);
-        return;
-      }
+    console.log("Original:", humanBytes(file.size), "Compressed:", humanBytes(blob.size));
 
-      // 2) Insert dans table article_photos
-      const { error: dbErr } = await supabaseClient
-        .from("article_photos")
-        .insert([{
-          article_id: Number(recordId),
-          path: path,
-          is_main: false,
-          sort_order: 0
-        }]);
+    setPhotosStatus(`Upload… (orig ${humanBytes(file.size)} → ${humanBytes(blob.size)})`);
 
-      if (dbErr) {
-        // rollback storage (best effort)
-        await supabaseClient.storage.from(BUCKET).remove([path]);
-        setPhotosStatus("");
-        setPhotosError("Erreur base : " + dbErr.message);
-        console.error(dbErr);
-        return;
-      }
+    // 1) Upload dans Storage (blob compressé)
+    const { error: upErr } = await supabaseClient
+      .storage
+      .from(BUCKET)
+      .upload(path, blob, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: "image/jpeg",
+      });
 
-      el("photoFile").value = "";
-      setPhotosStatus("Upload OK.");
-      await loadPhotos();
+    if (upErr) {
+      setPhotosStatus("");
+      setPhotosError("Erreur upload : " + upErr.message);
+      console.error(upErr);
+      return;
     }
 
-    async function setMainPhoto(photoId) {
-      setPhotosError("");
-      setPhotosStatus("Définition de la photo principale…");
+    // 2) Insert dans table article_photos
+    const { error: dbErr } = await supabaseClient
+      .from("article_photos")
+      .insert([{
+        article_id: Number(recordId),
+        path: path,
+        is_main: false,
+        sort_order: 0
+      }]);
 
-      // 1) Mettre toutes les photos à false
-      const { error: resetErr } = await supabaseClient
-        .from("article_photos")
-        .update({ is_main: false })
-        .eq("article_id", recordId);
-
-      if (resetErr) {
-        setPhotosStatus("");
-        setPhotosError("Erreur : " + resetErr.message);
-        console.error(resetErr);
-        return;
-      }
-
-      // 2) Mettre celle-ci à true
-      const { error: mainErr } = await supabaseClient
-        .from("article_photos")
-        .update({ is_main: true })
-        .eq("id", photoId);
-
-      if (mainErr) {
-        setPhotosStatus("");
-        setPhotosError("Erreur : " + mainErr.message);
-        console.error(mainErr);
-        return;
-      }
-
-      setPhotosStatus("OK.");
-      await loadPhotos();
+    if (dbErr) {
+      // rollback storage (best effort)
+      await supabaseClient.storage.from(BUCKET).remove([path]);
+      setPhotosStatus("");
+      setPhotosError("Erreur base : " + dbErr.message);
+      console.error(dbErr);
+      return;
     }
+
+    el("photoFile").value = "";
+    setPhotosStatus("Upload OK.");
+    await loadPhotos();
+
+  } catch (e) {
+    setPhotosStatus("");
+    setPhotosError("Erreur compression : " + (e?.message || e));
+    console.error(e);
+  }
+}
 
     async function deletePhoto(photoId, path) {
       setPhotosError("");
