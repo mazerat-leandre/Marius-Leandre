@@ -3,21 +3,45 @@
 <head>
   <meta charset="UTF-8" />
   <title>Projet Léandre - Articles</title>
+
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Tabulator (CSS + JS) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.0/dist/css/tabulator.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
+  <!-- CDN ref: jsDelivr package page -->
+  <!-- :contentReference[oaicite:2]{index=2} -->
+
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; max-width: 1100px; }
+    body { font-family: Arial, sans-serif; margin: 40px; max-width: 1200px; }
     .topbar { display:flex; justify-content:space-between; align-items:center; gap:12px; }
-    .box { border: 1px solid #ddd; border-radius: 10px; padding: 18px; margin-top: 16px; }
     button { padding: 10px 14px; cursor: pointer; border-radius: 10px; border: 1px solid #ccc; background: #f7f7f7; }
-    .product { padding: 10px; border-bottom: 1px solid #eee; }
-    .muted { color:#666; }
+    .box { border: 1px solid #ddd; border-radius: 10px; padding: 18px; margin-top: 16px; }
+    .muted { color:#666; font-size: 0.95em; }
     .error { color:#b00020; }
+    #table { margin-top: 12px; }
+
+    /* Petit confort visuel pour l'icône "éditer" */
+    .edit-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 26px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      background: #fff;
+      cursor: pointer;
+      user-select: none;
+    }
+    .edit-btn:hover { background: #f3f3f3; }
   </style>
 </head>
-<body>
 
+<body>
   <div class="topbar">
-    <h1>Liste des articles</h1>
+    <h1>Articles</h1>
     <div>
       <button id="btnHome">Accueil</button>
       <button id="btnLogout">Se déconnecter</button>
@@ -25,16 +49,41 @@
   </div>
 
   <div class="box">
-    <div id="products">Chargement...</div>
+    <div class="muted">
+      Astuce : tu peux <b>déplacer</b> les colonnes (drag & drop), les <b>redimensionner</b>, filtrer par colonne,
+      et activer un <b>groupement</b> via le menu “Grouper par”.
+    </div>
+
+    <div style="display:flex; gap:10px; align-items:center; margin-top:12px; flex-wrap: wrap;">
+      <label class="muted" for="groupBy">Grouper par :</label>
+      <select id="groupBy">
+        <option value="">(aucun)</option>
+        <option value="taille">Taille</option>
+        <option value="modele">Modèle</option>
+        <option value="couleur">Couleur</option>
+      </select>
+
+      <button id="btnReload">Recharger</button>
+      <span id="status" class="muted"></span>
+    </div>
+
+    <div id="table"></div>
+    <div id="err" class="error" style="margin-top:10px;"></div>
   </div>
 
   <script>
+    // =========================
+    // Supabase config
+    // =========================
     const supabaseUrl = "https://ghgmifhqgqiqignowred.supabase.co";
     const supabaseKey = "sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
     const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     const el = (id) => document.getElementById(id);
 
+    // =========================
+    // Auth guard
+    // =========================
     async function ensureAuthOrRedirect() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) {
@@ -44,50 +93,121 @@
       return true;
     }
 
-    async function loadProducts() {
-      el("products").innerHTML = "Chargement...";
+    // =========================
+    // Data loading
+    // =========================
+    async function fetchArticles() {
+      el("err").textContent = "";
+      el("status").textContent = "Chargement…";
 
+      // ⚠️ Adapte la liste des champs si besoin
       const { data, error } = await supabaseClient
         .from("ListeProduit")
-        .select("id, article, taille, modele, couleur")
+        .select("id, article, taille, modele, couleur, qui, date_ha, prix_ha, ca_encaisse, marge")
         .order("id", { ascending: true })
-        .limit(200);
+        .limit(1000);
 
       if (error) {
-        el("products").innerHTML = `<p class="error">Erreur: ${error.message}</p>`;
+        el("status").textContent = "";
+        el("err").textContent = "Erreur Supabase: " + error.message;
         console.error(error);
+        return [];
+      }
+
+      el("status").textContent = `${data.length} lignes`;
+      return data;
+    }
+
+    // =========================
+    // Tabulator table
+    // =========================
+    let table = null;
+
+    function createTable(rows) {
+      if (table) {
+        table.replaceData(rows);
         return;
       }
 
-      if (!data || data.length === 0) {
-        el("products").innerHTML = `<p class="muted">Aucun article.</p>`;
-        return;
-      }
+      table = new Tabulator("#table", {
+        data: rows,
+        layout: "fitDataStretch", // confortable visuellement :contentReference[oaicite:3]{index=3}
+        height: "650px",
+        movableColumns: true,     // déplacer les colonnes
+        resizableColumns: true,   // redimensionner :contentReference[oaicite:4]{index=4}
+        placeholder: "Aucun article",
+        pagination: "local",
+        paginationSize: 25,
 
-      el("products").innerHTML = "";
-      data.forEach(p => {
-        const div = document.createElement("div");
-        div.className = "product";
-        div.innerHTML = `
-          <strong>${p.article}</strong><br>
-          Taille: ${p.taille || "-"} | Modèle: ${p.modele || "-"} | Couleur: ${p.couleur || "-"}
-        `;
-        el("products").appendChild(div);
+        columns: [
+          {
+            title: "",
+            field: "_edit",
+            width: 60,
+            hozAlign: "center",
+            headerSort: false,
+            formatter: () => `<span class="edit-btn" title="Modifier">✏️</span>`,
+            cellClick: (e, cell) => {
+              const row = cell.getRow().getData();
+              // Page qu'on fera plus tard
+              location.href = `modificationarticle.html?id=${encodeURIComponent(row.id)}`;
+            }
+          },
+          { title: "ID", field: "id", width: 80, headerFilter: "input" },
+          { title: "Article", field: "article", headerFilter: "input", minWidth: 200 },
+          { title: "Taille", field: "taille", headerFilter: "input", width: 120 },
+          { title: "Modèle", field: "modele", headerFilter: "input", width: 160 },
+          { title: "Couleur", field: "couleur", headerFilter: "input", width: 140 },
+          { title: "Qui", field: "qui", headerFilter: "input", width: 140 },
+
+          // Quelques colonnes utiles (tu peux en enlever/ajouter)
+          { title: "Date HA", field: "date_ha", headerFilter: "input", width: 110 },
+          { title: "Prix HA", field: "prix_ha", headerFilter: "input", width: 110, hozAlign: "right" },
+          { title: "CA encaissé", field: "ca_encaisse", headerFilter: "input", width: 120, hozAlign: "right" },
+          { title: "Marge", field: "marge", headerFilter: "input", width: 100, hozAlign: "right" },
+        ],
       });
     }
 
-    document.getElementById("btnHome").addEventListener("click", () => {
-      location.href = "index.html";
-    });
+    function applyGrouping(field) {
+      if (!table) return;
+      // Tabulator : group by field (row grouping) :contentReference[oaicite:5]{index=5}
+      if (!field) {
+        table.setGroupBy(false);
+        return;
+      }
+      table.setGroupBy(field);
+    }
 
-    document.getElementById("btnLogout").addEventListener("click", async () => {
+    // =========================
+    // UI actions
+    // =========================
+    el("btnHome").addEventListener("click", () => location.href = "index.html");
+
+    el("btnLogout").addEventListener("click", async () => {
       await supabaseClient.auth.signOut();
       location.href = "index.html";
     });
 
+    el("btnReload").addEventListener("click", async () => {
+      const rows = await fetchArticles();
+      createTable(rows);
+      applyGrouping(el("groupBy").value);
+    });
+
+    el("groupBy").addEventListener("change", () => {
+      applyGrouping(el("groupBy").value);
+    });
+
+    // =========================
+    // Boot
+    // =========================
     (async () => {
       const ok = await ensureAuthOrRedirect();
-      if (ok) await loadProducts();
+      if (!ok) return;
+
+      const rows = await fetchArticles();
+      createTable(rows);
     })();
   </script>
 </body>
