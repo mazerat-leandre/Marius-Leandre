@@ -7,14 +7,12 @@
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- Tabulator (CSS + JS) -->
+  <!-- Tabulator -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.0/dist/css/tabulator.min.css">
   <script src="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
-  <!-- CDN ref: jsDelivr package page -->
-  <!-- :contentReference[oaicite:2]{index=2} -->
 
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; max-width: 1200px; }
+    body { font-family: Arial, sans-serif; margin: 40px; max-width: 1250px; }
     .topbar { display:flex; justify-content:space-between; align-items:center; gap:12px; }
     button { padding: 10px 14px; cursor: pointer; border-radius: 10px; border: 1px solid #ccc; background: #f7f7f7; }
     .box { border: 1px solid #ddd; border-radius: 10px; padding: 18px; margin-top: 16px; }
@@ -22,7 +20,6 @@
     .error { color:#b00020; }
     #table { margin-top: 12px; }
 
-    /* Petit confort visuel pour l'icône "éditer" */
     .edit-btn {
       display: inline-flex;
       align-items: center;
@@ -36,6 +33,15 @@
       user-select: none;
     }
     .edit-btn:hover { background: #f3f3f3; }
+
+    /* Petit confort : champs filtre en header */
+    .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input{
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      width: 100%;
+      box-sizing: border-box;
+    }
   </style>
 </head>
 
@@ -50,8 +56,7 @@
 
   <div class="box">
     <div class="muted">
-      Astuce : tu peux <b>déplacer</b> les colonnes (drag & drop), les <b>redimensionner</b>, filtrer par colonne,
-      et activer un <b>groupement</b> via le menu “Grouper par”.
+      Colonnes : filtres par colonne, déplacement (glisser-déposer), redimensionnement, groupement.
     </div>
 
     <div style="display:flex; gap:10px; align-items:center; margin-top:12px; flex-wrap: wrap;">
@@ -61,6 +66,8 @@
         <option value="taille">Taille</option>
         <option value="modele">Modèle</option>
         <option value="couleur">Couleur</option>
+        <option value="qui">Qui</option>
+        <option value="client_id">Client</option>
       </select>
 
       <button id="btnReload">Recharger</button>
@@ -82,6 +89,23 @@
     const el = (id) => document.getElementById(id);
 
     // =========================
+    // Helpers affichage
+    // =========================
+    function fmtDate(value) {
+      if (!value) return "";
+      // Si c'est déjà YYYY-MM-DD, on l'affiche tel quel.
+      // Si tu as un timestamp, Tabulator affichera la string; on reste simple ici.
+      return String(value);
+    }
+
+    function fmtMoney(value) {
+      if (value === null || value === undefined || value === "") return "";
+      const n = Number(value);
+      if (Number.isNaN(n)) return String(value);
+      return n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+    }
+
+    // =========================
     // Auth guard
     // =========================
     async function ensureAuthOrRedirect() {
@@ -100,12 +124,26 @@
       el("err").textContent = "";
       el("status").textContent = "Chargement…";
 
-      // ⚠️ Adapte la liste des champs si besoin
+      // On récupère strictement les champs demandés
       const { data, error } = await supabaseClient
         .from("ListeProduit")
-        .select("id, article, taille, modele, couleur, qui, date_ha, prix_ha, ca_encaisse, marge")
+        .select([
+          "id",                 // Numero (affiché)
+          "article",
+          "taille",
+          "modele",
+          "couleur",
+          "date_ha",
+          "date_mise_en_ligne",
+          "date_vente",
+          "prix_ha",
+          "ca_encaisse",
+          "client_id",
+          "date_reception",
+          "qui"
+        ].join(","))
         .order("id", { ascending: true })
-        .limit(1000);
+        .limit(2000);
 
       if (error) {
         el("status").textContent = "";
@@ -123,7 +161,7 @@
     // =========================
     let table = null;
 
-    function createTable(rows) {
+    function createOrUpdateTable(rows) {
       if (table) {
         table.replaceData(rows);
         return;
@@ -131,15 +169,16 @@
 
       table = new Tabulator("#table", {
         data: rows,
-        layout: "fitDataStretch", // confortable visuellement :contentReference[oaicite:3]{index=3}
-        height: "650px",
-        movableColumns: true,     // déplacer les colonnes
-        resizableColumns: true,   // redimensionner :contentReference[oaicite:4]{index=4}
+        height: "680px",
+        layout: "fitColumns",
+        movableColumns: true,
+        resizableColumns: true,
         placeholder: "Aucun article",
         pagination: "local",
         paginationSize: 25,
 
         columns: [
+          // 1) Colonne crayon
           {
             title: "",
             field: "_edit",
@@ -149,34 +188,75 @@
             formatter: () => `<span class="edit-btn" title="Modifier">✏️</span>`,
             cellClick: (e, cell) => {
               const row = cell.getRow().getData();
-              // Page qu'on fera plus tard
               location.href = `modificationarticle.html?id=${encodeURIComponent(row.id)}`;
             }
           },
-          { title: "ID", field: "id", width: 80, headerFilter: "input" },
-          { title: "Article", field: "article", headerFilter: "input", minWidth: 200 },
-          { title: "Taille", field: "taille", headerFilter: "input", width: 120 },
-          { title: "Modèle", field: "modele", headerFilter: "input", width: 160 },
-          { title: "Couleur", field: "couleur", headerFilter: "input", width: 140 },
-          { title: "Qui", field: "qui", headerFilter: "input", width: 140 },
 
-          // Quelques colonnes utiles (tu peux en enlever/ajouter)
-          { title: "Date HA", field: "date_ha", headerFilter: "input", width: 110 },
-          { title: "Prix HA", field: "prix_ha", headerFilter: "input", width: 110, hozAlign: "right" },
-          { title: "CA encaissé", field: "ca_encaisse", headerFilter: "input", width: 120, hozAlign: "right" },
-          { title: "Marge", field: "marge", headerFilter: "input", width: 100, hozAlign: "right" },
+          // 2) Ordre des colonnes demandé
+          { title: "Numero", field: "id", width: 95, headerFilter: "input" },
+          { title: "Article", field: "article", minWidth: 220, headerFilter: "input" },
+          { title: "Taille", field: "taille", width: 110, headerFilter: "input" },
+          { title: "Modèle", field: "modele", width: 160, headerFilter: "input" },
+          { title: "Couleur", field: "couleur", width: 140, headerFilter: "input" },
+
+          {
+            title: "Date HA",
+            field: "date_ha",
+            width: 120,
+            headerFilter: "input",
+            formatter: (cell) => fmtDate(cell.getValue())
+          },
+          {
+            title: "Date mise en ligne",
+            field: "date_mise_en_ligne",
+            width: 160,
+            headerFilter: "input",
+            formatter: (cell) => fmtDate(cell.getValue())
+          },
+          {
+            title: "Date vente",
+            field: "date_vente",
+            width: 120,
+            headerFilter: "input",
+            formatter: (cell) => fmtDate(cell.getValue())
+          },
+
+          {
+            title: "Prix HA",
+            field: "prix_ha",
+            width: 120,
+            hozAlign: "right",
+            headerFilter: "input",
+            formatter: (cell) => fmtMoney(cell.getValue())
+          },
+          {
+            title: "CA encaissé",
+            field: "ca_encaisse",
+            width: 130,
+            hozAlign: "right",
+            headerFilter: "input",
+            formatter: (cell) => fmtMoney(cell.getValue())
+          },
+
+          { title: "Client", field: "client_id", width: 110, headerFilter: "input" },
+
+          {
+            title: "Date réception",
+            field: "date_reception",
+            width: 140,
+            headerFilter: "input",
+            formatter: (cell) => fmtDate(cell.getValue())
+          },
+
+          { title: "Qui", field: "qui", width: 140, headerFilter: "input" },
         ],
       });
     }
 
     function applyGrouping(field) {
       if (!table) return;
-      // Tabulator : group by field (row grouping) :contentReference[oaicite:5]{index=5}
-      if (!field) {
-        table.setGroupBy(false);
-        return;
-      }
-      table.setGroupBy(field);
+      if (!field) table.setGroupBy(false);
+      else table.setGroupBy(field);
     }
 
     // =========================
@@ -191,7 +271,7 @@
 
     el("btnReload").addEventListener("click", async () => {
       const rows = await fetchArticles();
-      createTable(rows);
+      createOrUpdateTable(rows);
       applyGrouping(el("groupBy").value);
     });
 
@@ -207,7 +287,7 @@
       if (!ok) return;
 
       const rows = await fetchArticles();
-      createTable(rows);
+      createOrUpdateTable(rows);
     })();
   </script>
 </body>
