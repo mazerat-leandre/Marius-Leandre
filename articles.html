@@ -194,28 +194,28 @@
           },
 
           // 2) Ordre des colonnes demandé
-          { title: "Numero", field: "numero", width: 95, headerFilter: "input" },
+          { title: "Num", field: "numero", width: 95, headerFilter: "input" },
           { title: "Article", field: "article", minWidth: 220, headerFilter: "input" },
           { title: "Taille", field: "taille", width: 110, headerFilter: "input" },
           { title: "Modèle", field: "modele", width: 160, headerFilter: "input" },
           { title: "Couleur", field: "couleur", width: 140, headerFilter: "input" },
 
           {
-            title: "Date HA",
+            title: "HA le",
             field: "date_ha",
             width: 120,
             headerFilter: "input",
             formatter: (cell) => fmtDate(cell.getValue())
           },
           {
-            title: "Date mise en ligne",
+            title: "en ligne le",
             field: "date_mise_en_ligne",
             width: 160,
             headerFilter: "input",
             formatter: (cell) => fmtDate(cell.getValue())
           },
           {
-            title: "Date vente",
+            title: "Vendu le",
             field: "date_vente",
             width: 120,
             headerFilter: "input",
@@ -223,7 +223,7 @@
           },
 
           {
-            title: "Prix HA",
+            title: "HA €",
             field: "prix_ha",
             width: 120,
             hozAlign: "right",
@@ -231,7 +231,7 @@
             formatter: (cell) => fmtMoney(cell.getValue())
           },
           {
-            title: "CA encaissé",
+            title: "Vendu €",
             field: "ca_encaisse",
             width: 130,
             hozAlign: "right",
@@ -242,7 +242,7 @@
           { title: "Client", field: "client_id", width: 110, headerFilter: "input" },
 
           {
-            title: "Date réception",
+            title: "Recu le",
             field: "date_recep",
             width: 140,
             headerFilter: "input",
