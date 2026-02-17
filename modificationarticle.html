@@ -351,14 +351,11 @@
         el("photosGrid").appendChild(card);
       }
     }
-async function compressImage(file, options = {}) {
-  const {
-    maxSize = 1280,      // taille max du plus grand côté
-    quality = 0.75,      // 0.0 à 1.0
-    mimeType = "image/jpeg" // "image/jpeg" ou "image/webp"
-  } = options;
+async function compressImage(file) {
+  const MAX_SIZE = 800;        // taille max (800px)
+  const QUALITY = 0.70;        // compression JPEG
 
-  // Lire le fichier en image
+  // Charger l'image
   const dataUrl = await new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
@@ -373,16 +370,13 @@ async function compressImage(file, options = {}) {
     i.src = dataUrl;
   });
 
-  // Calcul ratio
+  // Redimensionnement
   let { width, height } = img;
-  const maxDim = Math.max(width, height);
-  if (maxDim > maxSize) {
-    const scale = maxSize / maxDim;
-    width = Math.round(width * scale);
-    height = Math.round(height * scale);
-  }
 
-  // Canvas
+  const ratio = Math.min(MAX_SIZE / width, MAX_SIZE / height);
+  width = Math.round(width * ratio);
+  height = Math.round(height * ratio);
+
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
@@ -390,15 +384,18 @@ async function compressImage(file, options = {}) {
   const ctx = canvas.getContext("2d");
   ctx.drawImage(img, 0, 0, width, height);
 
-  // Convertir en Blob compressé
+  // Compression JPEG
   const blob = await new Promise((resolve) => {
-    canvas.toBlob((b) => resolve(b), mimeType, quality);
+    canvas.toBlob(
+      (b) => resolve(b),
+      "image/jpeg",
+      QUALITY
+    );
   });
-
-  if (!blob) throw new Error("Compression impossible (canvas.toBlob null).");
 
   return blob;
 }
+
 
 function humanBytes(bytes) {
   if (!bytes && bytes !== 0) return "";
