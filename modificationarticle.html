@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Projet Léandre - Modification article</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     body { font-family: Arial, sans-serif; margin: 40px; max-width: 980px; }
     .topbar { display:flex; justify-content:space-between; align-items:center; gap:12px; }
@@ -66,6 +67,7 @@
     <div id="status" class="muted">Chargement…</div>
     <div id="msg" style="margin-top:10px;"></div>
 
+    <!-- FORMULAIRE ARTICLE -->
     <div id="form" style="display:none; margin-top:16px;">
       <div class="grid">
         <label>ID (technique)</label>
@@ -138,7 +140,7 @@
     const supabaseKey = "sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
     const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    const BUCKET = "Article-photos";
+    const BUCKET = "Article-photos";  // ⚠️ le nom EXACT du bucket
 
     const el = (id) => document.getElementById(id);
     const msg = (html) => { el("msg").innerHTML = html || ""; };
@@ -148,6 +150,7 @@
 
     let original = null;
 
+    // Vérifier authentification
     async function ensureAuthOrRedirect() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) {
@@ -157,9 +160,10 @@
       return session;
     }
 
+    // Remplir formulaire
     function setFormValues(row) {
       el("id").value = row.id ?? "";
-      el("numero").value = row.numero ?? row.Numero ?? row["Numero"] ?? "";
+      el("numero").value = row.numero ?? row.Numero ?? "";
       el("article").value = row.article ?? "";
       el("taille").value = row.taille ?? "";
       el("modele").value = row.modele ?? "";
@@ -174,6 +178,7 @@
       el("qui").value = row.qui ?? "";
     }
 
+    // Form payload
     function getPayload() {
       return {
         numero: el("numero").value.trim() || null,
@@ -192,49 +197,42 @@
       };
     }
 
+    // Charger article
     async function loadRecord() {
       if (!recordId) {
-        el("status").textContent = "Erreur : id manquant dans l’URL (ex: modificationarticle.html?id=123).";
-        msg(`<p class="error">Impossible de charger un article sans identifiant.</p>`);
+        el("status").textContent = "Erreur : id manquant.";
+        msg(`<p class="error">Aucun ID fourni dans l’URL.</p>`);
         return false;
       }
 
       el("status").textContent = "Chargement…";
-      msg("");
 
       const { data, error } = await supabaseClient
         .from("ListeProduit")
-        .select("id, numero, article, taille, modele, couleur, date_ha, date_mise_en_ligne, date_vente, prix_ha, ca_encaisse, client_id, date_recep, qui")
+        .select("*")
         .eq("id", recordId)
         .single();
 
       if (error) {
-        el("status").textContent = "";
-        msg(`<p class="error">Erreur Supabase : ${error.message}</p>`);
-        console.error(error);
+        msg(`<p class="error">Erreur : ${error.message}</p>`);
         return false;
       }
 
       original = data;
       setFormValues(data);
 
-      el("status").textContent = `Article chargé (id = ${recordId})`;
       el("form").style.display = "";
       el("photosBox").style.display = "";
+      el("status").textContent = "Article chargé.";
+
       return true;
     }
 
+    // Enregistrer article
     async function saveRecord() {
       msg("");
 
       const payload = getPayload();
-
-      if (!payload.article) {
-        msg(`<p class="error">Le champ "Article" est obligatoire.</p>`);
-        return;
-      }
-
-      el("status").textContent = "Enregistrement…";
 
       const { error } = await supabaseClient
         .from("ListeProduit")
@@ -242,83 +240,151 @@
         .eq("id", recordId);
 
       if (error) {
-        el("status").textContent = "";
-        msg(`<p class="error">Erreur lors de l’enregistrement : ${error.message}</p>`);
-        console.error(error);
+        msg(`<p class="error">${error.message}</p>`);
         return;
       }
 
-      el("status").textContent = "Enregistré.";
       msg(`<p class="ok">Modifications enregistrées.</p>`);
       await loadRecord();
     }
 
-    // =========================
-    // Photos
-    // =========================
-    function setPhotosStatus(text) {
-      el("photosStatus").textContent = text || "";
+    /************* COMPRESSION PHOTO *************/
+    async function compressImage(file, options = {}) {
+      const {
+        maxSize = 1280,
+        quality = 0.75,
+        mimeType = "image/jpeg"
+      } = options;
+
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const img = await new Promise((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = reject;
+        i.src = dataUrl;
+      });
+
+      let { width, height } = img;
+
+      const ratio = Math.min(maxSize / width, maxSize / height, 1);
+      width = Math.floor(width * ratio);
+      height = Math.floor(height * ratio);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const blob = await new Promise((resolve, reject) => {
+        canvas.toBlob(
+          (b) => b ? resolve(b) : reject(new Error("Compression impossible")),
+          mimeType,
+          quality
+        );
+      });
+
+      return blob;
     }
 
-    function setPhotosError(text) {
-      el("photosError").textContent = text || "";
+    /************* UPLOAD PHOTO *************/
+    async function uploadPhoto() {
+      el("photosError").textContent = "";
+
+      const file = el("photoFile").files?.[0];
+      if (!file) {
+        el("photosError").textContent = "Aucun fichier choisi.";
+        return;
+      }
+
+      el("photosStatus").textContent = "Compression…";
+
+      let blob;
+      try {
+        blob = await compressImage(file);
+      } catch (e) {
+        el("photosError").textContent = "Erreur compression : " + e.message;
+        return;
+      }
+
+      const filename = `${Date.now()}_${Math.random().toString(16).slice(2)}.jpg`;
+      const path = `articles/${recordId}/${filename}`;
+
+      el("photosStatus").textContent = "Upload…";
+
+      const { error: uploadErr } = await supabaseClient
+        .storage
+        .from(BUCKET)
+        .upload(path, blob, {
+          contentType: "image/jpeg",
+          upsert: false
+        });
+
+      if (uploadErr) {
+        el("photosError").textContent = "Erreur upload : " + uploadErr.message;
+        return;
+      }
+
+      const { error: dbErr } = await supabaseClient
+        .from("article_photos")
+        .insert([
+          { article_id: Number(recordId), path, is_main: false, sort_order: 0 }
+        ]);
+
+      if (dbErr) {
+        el("photosError").textContent = "Erreur DB : " + dbErr.message;
+        return;
+      }
+
+      el("photoFile").value = "";
+      el("photosStatus").textContent = "OK";
+
+      await loadPhotos();
     }
 
-    function safeExtFromName(name) {
-      const dot = name.lastIndexOf(".");
-      if (dot === -1) return "jpg";
-      return name.substring(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-    }
-
-    function rand() {
-      return Math.random().toString(16).slice(2);
-    }
-
+    /************* CHARGER PHOTOS *************/
     async function loadPhotos() {
-      setPhotosError("");
-      setPhotosStatus("Chargement des photos…");
+      el("photosError").textContent = "";
+      el("photosStatus").textContent = "Chargement…";
       el("photosGrid").innerHTML = "";
 
       const { data, error } = await supabaseClient
         .from("article_photos")
-        .select("id, article_id, path, is_main, sort_order, created_at")
+        .select("*")
         .eq("article_id", recordId)
         .order("is_main", { ascending: false })
-        .order("sort_order", { ascending: true })
-        .order("id", { ascending: true });
+        .order("sort_order", { ascending: true });
 
       if (error) {
-        setPhotosStatus("");
-        setPhotosError("Erreur lecture photos : " + error.message);
-        console.error(error);
+        el("photosError").textContent = "Erreur lecture : " + error.message;
         return;
       }
 
-      if (!data || data.length === 0) {
-        setPhotosStatus("Aucune photo.");
+      if (!data.length) {
+        el("photosStatus").textContent = "Aucune photo";
         return;
       }
 
-      setPhotosStatus(`${data.length} photo(s)`);
+      el("photosStatus").textContent = `${data.length} photo(s)`;
 
-      // Pour bucket privé : on génère des URLs signées
       for (const p of data) {
-        const { data: signed, error: signErr } = await supabaseClient
+        const { data: signed } = await supabaseClient
           .storage
           .from(BUCKET)
-          .createSignedUrl(p.path, 60 * 60); // 1 heure
+          .createSignedUrl(p.path, 3600);
 
-        if (signErr) {
-          console.error(signErr);
-          continue;
-        }
-
-        const card = document.createElement("div");
-        card.className = "photo-card";
+        const div = document.createElement("div");
+        div.className = "photo-card";
 
         const img = document.createElement("img");
         img.src = signed.signedUrl;
-        img.alt = "Photo article";
 
         const meta = document.createElement("div");
         meta.className = "muted";
@@ -328,215 +394,52 @@
         actions.className = "photo-actions";
 
         const btnMain = document.createElement("button");
-        btnMain.textContent = "Définir principale";
-        btnMain.disabled = !!p.is_main;
-        btnMain.addEventListener("click", async () => {
-          await setMainPhoto(p.id);
-        });
+        btnMain.textContent = "Principale";
+        btnMain.disabled = p.is_main;
+        btnMain.onclick = () => setMainPhoto(p.id);
 
         const btnDelete = document.createElement("button");
         btnDelete.textContent = "Supprimer";
-        btnDelete.addEventListener("click", async () => {
-          if (!confirm("Supprimer cette photo ?")) return;
-          await deletePhoto(p.id, p.path);
-        });
+        btnDelete.onclick = () => deletePhoto(p.id, p.path);
 
         actions.appendChild(btnMain);
         actions.appendChild(btnDelete);
 
-        card.appendChild(img);
-        card.appendChild(meta);
-        card.appendChild(actions);
+        div.appendChild(img);
+        div.appendChild(meta);
+        div.appendChild(actions);
 
-        el("photosGrid").appendChild(card);
+        el("photosGrid").appendChild(div);
       }
     }
-async function compressImage(file) {
-  const MAX_SIZE = 800;        // taille max (800px)
-  const QUALITY = 0.70;        // compression JPEG
 
-  // Charger l'image
-  const dataUrl = await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-
-  const img = await new Promise((resolve, reject) => {
-    const i = new Image();
-    i.onload = () => resolve(i);
-    i.onerror = reject;
-    i.src = dataUrl;
-  });
-
-  // Redimensionnement
-  let { width, height } = img;
-
-  const ratio = Math.min(MAX_SIZE / width, MAX_SIZE / height);
-  width = Math.round(width * ratio);
-  height = Math.round(height * ratio);
-
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(img, 0, 0, width, height);
-
-  // Compression JPEG
-  const blob = await new Promise((resolve) => {
-    canvas.toBlob(
-      (b) => resolve(b),
-      "image/jpeg",
-      QUALITY
-    );
-  });
-
-  return blob;
-}
-
-
-function humanBytes(bytes) {
-  if (!bytes && bytes !== 0) return "";
-  const units = ["B", "KB", "MB", "GB"];
-  let i = 0;
-  let v = bytes;
-  while (v >= 1024 && i < units.length - 1) {
-    v = v / 1024;
-    i++;
-  }
-  return `${v.toFixed(i === 0 ? 0 : 2)} ${units[i]}`;
-}
-
-    async function uploadPhoto() {
-  setPhotosError("");
-
-  const file = el("photoFile").files?.[0];
-  if (!file) {
-    setPhotosError("Choisis un fichier image.");
-    return;
-  }
-
-  setPhotosStatus("Compression…");
-
-  try {
-    // ⚙️ Réglages : à ajuster selon ton besoin
-    const blob = await compressImage(file, {
-      maxSize: 1280,          // 1280 px (bon compromis)
-      quality: 0.75,          // qualité JPEG
-      mimeType: "image/jpeg"  // jpeg léger et compatible
-    });
-
-    // Nom de fichier final
-    const filename = `${Date.now()}_${Math.random().toString(16).slice(2)}.jpg`;
-    const path = `articles/${recordId}/${filename}`;
-
-    console.log("Original:", humanBytes(file.size), "Compressed:", humanBytes(blob.size));
-
-    setPhotosStatus(`Upload… (orig ${humanBytes(file.size)} → ${humanBytes(blob.size)})`);
-
-    // 1) Upload dans Storage (blob compressé)
-    const { error: upErr } = await supabaseClient
-      .storage
-      .from(BUCKET)
-      .upload(path, blob, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: "image/jpeg",
-      });
-
-    if (upErr) {
-      setPhotosStatus("");
-      setPhotosError("Erreur upload : " + upErr.message);
-      console.error(upErr);
-      return;
-    }
-
-    // 2) Insert dans table article_photos
-    const { error: dbErr } = await supabaseClient
-      .from("article_photos")
-      .insert([{
-        article_id: Number(recordId),
-        path: path,
-        is_main: false,
-        sort_order: 0
-      }]);
-
-    if (dbErr) {
-      // rollback storage (best effort)
-      await supabaseClient.storage.from(BUCKET).remove([path]);
-      setPhotosStatus("");
-      setPhotosError("Erreur base : " + dbErr.message);
-      console.error(dbErr);
-      return;
-    }
-
-    el("photoFile").value = "";
-    setPhotosStatus("Upload OK.");
-    await loadPhotos();
-
-  } catch (e) {
-    setPhotosStatus("");
-    setPhotosError("Erreur compression : " + (e?.message || e));
-    console.error(e);
-  }
-}
-
-    async function deletePhoto(photoId, path) {
-      setPhotosError("");
-      setPhotosStatus("Suppression…");
-
-      // 1) supprimer dans Storage
-      const { error: rmErr } = await supabaseClient
-        .storage
-        .from(BUCKET)
-        .remove([path]);
-
-      if (rmErr) {
-        setPhotosStatus("");
-        setPhotosError("Erreur suppression fichier : " + rmErr.message);
-        console.error(rmErr);
-        return;
-      }
-
-      // 2) supprimer la ligne en DB
-      const { error: dbErr } = await supabaseClient
-        .from("article_photos")
-        .delete()
-        .eq("id", photoId);
-
-      if (dbErr) {
-        setPhotosStatus("");
-        setPhotosError("Erreur suppression DB : " + dbErr.message);
-        console.error(dbErr);
-        return;
-      }
-
-      setPhotosStatus("Supprimé.");
+    /* Photo principale */
+    async function setMainPhoto(photoId) {
+      await supabaseClient.from("article_photos").update({ is_main: false }).eq("article_id", recordId);
+      await supabaseClient.from("article_photos").update({ is_main: true }).eq("id", photoId);
       await loadPhotos();
     }
 
-    // Buttons
-    el("btnBack").addEventListener("click", () => location.href = "articles.html");
-    el("btnClose").addEventListener("click", () => location.href = "articles.html");
+    /* Supprimer photo */
+    async function deletePhoto(photoId, path) {
+      await supabaseClient.storage.from(BUCKET).remove([path]);
+      await supabaseClient.from("article_photos").delete().eq("id", photoId);
+      await loadPhotos();
+    }
 
-    el("btnCancel").addEventListener("click", () => {
-      if (!original) return;
-      setFormValues(original);
-      msg(`<p class="muted">Modifications annulées (retour aux valeurs initiales).</p>`);
-    });
+    /* Boutons navigation */
+    el("btnBack").onclick = () => location.href = "articles.html";
+    el("btnClose").onclick = () => location.href = "articles.html";
+    el("btnCancel").onclick = () => setFormValues(original);
+    el("btnSave").onclick = saveRecord;
+    el("btnUpload").onclick = uploadPhoto;
 
-    el("btnSave").addEventListener("click", saveRecord);
-
-    el("btnLogout").addEventListener("click", async () => {
+    el("btnLogout").onclick = async () => {
       await supabaseClient.auth.signOut();
       location.href = "index.html";
-    });
+    };
 
-    el("btnUpload").addEventListener("click", uploadPhoto);
-
-    // Boot
+    /* Boot */
     (async () => {
       const session = await ensureAuthOrRedirect();
       if (!session) return;
