@@ -5,7 +5,7 @@
   <title>Projet Léandre - Modification article</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; max-width: 900px; }
+    body { font-family: Arial, sans-serif; margin: 40px; max-width: 980px; }
     .topbar { display:flex; justify-content:space-between; align-items:center; gap:12px; }
     .box { border: 1px solid #ddd; border-radius: 10px; padding: 18px; margin-top: 16px; }
     .grid { display:grid; grid-template-columns: 220px 1fr; gap: 10px 14px; align-items:center; }
@@ -18,6 +18,38 @@
     .error { color:#b00020; }
     .ok { color:#0a7a0a; }
     .readonly { background:#f6f6f6; }
+
+    /* Photos */
+    .photos-bar { display:flex; gap:10px; align-items:center; flex-wrap: wrap; }
+    .photos-grid {
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .photo-card {
+      border: 1px solid #e3e3e3;
+      border-radius: 10px;
+      padding: 10px;
+      display:flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .photo-card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      border-radius: 8px;
+      background: #f3f3f3;
+    }
+    .photo-actions {
+      display:flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    @media (max-width: 900px) {
+      .photos-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
   </style>
 </head>
 <body>
@@ -87,10 +119,26 @@
     </div>
   </div>
 
+  <!-- PHOTOS -->
+  <div class="box" id="photosBox" style="display:none;">
+    <h2 style="margin-top:0;">Photos</h2>
+
+    <div class="photos-bar">
+      <input type="file" id="photoFile" accept="image/*" />
+      <button id="btnUpload" class="primary">Uploader</button>
+      <span id="photosStatus" class="muted"></span>
+    </div>
+
+    <div id="photosError" class="error" style="margin-top:10px;"></div>
+    <div id="photosGrid" class="photos-grid"></div>
+  </div>
+
   <script>
     const supabaseUrl = "https://ghgmifhqgqiqignowred.supabase.co";
     const supabaseKey = "sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
     const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    const BUCKET = "article-photos";
 
     const el = (id) => document.getElementById(id);
     const msg = (html) => { el("msg").innerHTML = html || ""; };
@@ -104,9 +152,9 @@
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) {
         location.href = "index.html";
-        return false;
+        return null;
       }
-      return true;
+      return session;
     }
 
     function setFormValues(row) {
@@ -127,7 +175,6 @@
     }
 
     function getPayload() {
-      // On envoie uniquement les colonnes métier (pas id)
       return {
         numero: el("numero").value.trim() || null,
         article: el("article").value.trim() || null,
@@ -149,13 +196,12 @@
       if (!recordId) {
         el("status").textContent = "Erreur : id manquant dans l’URL (ex: modificationarticle.html?id=123).";
         msg(`<p class="error">Impossible de charger un article sans identifiant.</p>`);
-        return;
+        return false;
       }
 
       el("status").textContent = "Chargement…";
       msg("");
 
-      // On récupère tous les champs utiles
       const { data, error } = await supabaseClient
         .from("ListeProduit")
         .select("id, numero, article, taille, modele, couleur, date_ha, date_mise_en_ligne, date_vente, prix_ha, ca_encaisse, client_id, date_recep, qui")
@@ -166,7 +212,7 @@
         el("status").textContent = "";
         msg(`<p class="error">Erreur Supabase : ${error.message}</p>`);
         console.error(error);
-        return;
+        return false;
       }
 
       original = data;
@@ -174,6 +220,8 @@
 
       el("status").textContent = `Article chargé (id = ${recordId})`;
       el("form").style.display = "";
+      el("photosBox").style.display = "";
+      return true;
     }
 
     async function saveRecord() {
@@ -181,7 +229,6 @@
 
       const payload = getPayload();
 
-      // Contrôle minimal (tu pourras affiner)
       if (!payload.article) {
         msg(`<p class="error">Le champ "Article" est obligatoire.</p>`);
         return;
@@ -203,9 +250,229 @@
 
       el("status").textContent = "Enregistré.";
       msg(`<p class="ok">Modifications enregistrées.</p>`);
-
-      // Recharge pour synchroniser
       await loadRecord();
+    }
+
+    // =========================
+    // Photos
+    // =========================
+    function setPhotosStatus(text) {
+      el("photosStatus").textContent = text || "";
+    }
+
+    function setPhotosError(text) {
+      el("photosError").textContent = text || "";
+    }
+
+    function safeExtFromName(name) {
+      const dot = name.lastIndexOf(".");
+      if (dot === -1) return "jpg";
+      return name.substring(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+    }
+
+    function rand() {
+      return Math.random().toString(16).slice(2);
+    }
+
+    async function loadPhotos() {
+      setPhotosError("");
+      setPhotosStatus("Chargement des photos…");
+      el("photosGrid").innerHTML = "";
+
+      const { data, error } = await supabaseClient
+        .from("article_photos")
+        .select("id, article_id, path, is_main, sort_order, created_at")
+        .eq("article_id", recordId)
+        .order("is_main", { ascending: false })
+        .order("sort_order", { ascending: true })
+        .order("id", { ascending: true });
+
+      if (error) {
+        setPhotosStatus("");
+        setPhotosError("Erreur lecture photos : " + error.message);
+        console.error(error);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        setPhotosStatus("Aucune photo.");
+        return;
+      }
+
+      setPhotosStatus(`${data.length} photo(s)`);
+
+      // Pour bucket privé : on génère des URLs signées
+      for (const p of data) {
+        const { data: signed, error: signErr } = await supabaseClient
+          .storage
+          .from(BUCKET)
+          .createSignedUrl(p.path, 60 * 60); // 1 heure
+
+        if (signErr) {
+          console.error(signErr);
+          continue;
+        }
+
+        const card = document.createElement("div");
+        card.className = "photo-card";
+
+        const img = document.createElement("img");
+        img.src = signed.signedUrl;
+        img.alt = "Photo article";
+
+        const meta = document.createElement("div");
+        meta.className = "muted";
+        meta.textContent = p.is_main ? "Photo principale" : "";
+
+        const actions = document.createElement("div");
+        actions.className = "photo-actions";
+
+        const btnMain = document.createElement("button");
+        btnMain.textContent = "Définir principale";
+        btnMain.disabled = !!p.is_main;
+        btnMain.addEventListener("click", async () => {
+          await setMainPhoto(p.id);
+        });
+
+        const btnDelete = document.createElement("button");
+        btnDelete.textContent = "Supprimer";
+        btnDelete.addEventListener("click", async () => {
+          if (!confirm("Supprimer cette photo ?")) return;
+          await deletePhoto(p.id, p.path);
+        });
+
+        actions.appendChild(btnMain);
+        actions.appendChild(btnDelete);
+
+        card.appendChild(img);
+        card.appendChild(meta);
+        card.appendChild(actions);
+
+        el("photosGrid").appendChild(card);
+      }
+    }
+
+    async function uploadPhoto() {
+      setPhotosError("");
+
+      const file = el("photoFile").files?.[0];
+      if (!file) {
+        setPhotosError("Choisis un fichier image.");
+        return;
+      }
+
+      setPhotosStatus("Upload…");
+
+      const ext = safeExtFromName(file.name);
+      const filename = `${Date.now()}_${rand()}.${ext}`;
+      const path = `articles/${recordId}/${filename}`;
+
+      // 1) Upload dans Storage
+      const { error: upErr } = await supabaseClient
+        .storage
+        .from(BUCKET)
+        .upload(path, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (upErr) {
+        setPhotosStatus("");
+        setPhotosError("Erreur upload : " + upErr.message);
+        console.error(upErr);
+        return;
+      }
+
+      // 2) Insert dans table article_photos
+      const { error: dbErr } = await supabaseClient
+        .from("article_photos")
+        .insert([{
+          article_id: Number(recordId),
+          path: path,
+          is_main: false,
+          sort_order: 0
+        }]);
+
+      if (dbErr) {
+        // rollback storage (best effort)
+        await supabaseClient.storage.from(BUCKET).remove([path]);
+        setPhotosStatus("");
+        setPhotosError("Erreur base : " + dbErr.message);
+        console.error(dbErr);
+        return;
+      }
+
+      el("photoFile").value = "";
+      setPhotosStatus("Upload OK.");
+      await loadPhotos();
+    }
+
+    async function setMainPhoto(photoId) {
+      setPhotosError("");
+      setPhotosStatus("Définition de la photo principale…");
+
+      // 1) Mettre toutes les photos à false
+      const { error: resetErr } = await supabaseClient
+        .from("article_photos")
+        .update({ is_main: false })
+        .eq("article_id", recordId);
+
+      if (resetErr) {
+        setPhotosStatus("");
+        setPhotosError("Erreur : " + resetErr.message);
+        console.error(resetErr);
+        return;
+      }
+
+      // 2) Mettre celle-ci à true
+      const { error: mainErr } = await supabaseClient
+        .from("article_photos")
+        .update({ is_main: true })
+        .eq("id", photoId);
+
+      if (mainErr) {
+        setPhotosStatus("");
+        setPhotosError("Erreur : " + mainErr.message);
+        console.error(mainErr);
+        return;
+      }
+
+      setPhotosStatus("OK.");
+      await loadPhotos();
+    }
+
+    async function deletePhoto(photoId, path) {
+      setPhotosError("");
+      setPhotosStatus("Suppression…");
+
+      // 1) supprimer dans Storage
+      const { error: rmErr } = await supabaseClient
+        .storage
+        .from(BUCKET)
+        .remove([path]);
+
+      if (rmErr) {
+        setPhotosStatus("");
+        setPhotosError("Erreur suppression fichier : " + rmErr.message);
+        console.error(rmErr);
+        return;
+      }
+
+      // 2) supprimer la ligne en DB
+      const { error: dbErr } = await supabaseClient
+        .from("article_photos")
+        .delete()
+        .eq("id", photoId);
+
+      if (dbErr) {
+        setPhotosStatus("");
+        setPhotosError("Erreur suppression DB : " + dbErr.message);
+        console.error(dbErr);
+        return;
+      }
+
+      setPhotosStatus("Supprimé.");
+      await loadPhotos();
     }
 
     // Buttons
@@ -225,11 +492,17 @@
       location.href = "index.html";
     });
 
+    el("btnUpload").addEventListener("click", uploadPhoto);
+
     // Boot
     (async () => {
-      const ok = await ensureAuthOrRedirect();
+      const session = await ensureAuthOrRedirect();
+      if (!session) return;
+
+      const ok = await loadRecord();
       if (!ok) return;
-      await loadRecord();
+
+      await loadPhotos();
     })();
   </script>
 
