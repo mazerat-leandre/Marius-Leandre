@@ -26,7 +26,10 @@
       padding: 10px 0;
     }
 
-    h1 { margin: 0; font-size: 24px; }
+    h1 {
+      margin: 0;
+      font-size: 24px;
+    }
 
     .btn {
       padding: 10px 14px;
@@ -36,9 +39,14 @@
       background: #f7f7f7;
       font-size: 14px;
     }
-    .btn.primary { background:#111; color:#fff; border-color:#111; }
 
-    /* Photo principale */
+    .btn.primary {
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    /* PHOTO PRINCIPALE */
     .photo-main {
       width: 100%;
       height: auto;
@@ -48,7 +56,7 @@
       background: #eee;
     }
 
-    /* Thumbs */
+    /* MINIATURES */
     .thumbs {
       display:flex;
       gap:10px;
@@ -65,9 +73,12 @@
       border: 2px solid transparent;
       transition: border-color .2s;
     }
-    .thumb.active { border-color:#111; }
 
-    /* Box sections */
+    .thumb.active {
+      border-color:#111;
+    }
+
+    /* BLOCS */
     .box {
       background:white;
       border-radius:12px;
@@ -83,7 +94,7 @@
       padding-bottom:6px;
     }
 
-    /* Responsive grid */
+    /* GRID TEXTE */
     .grid2 {
       display:grid;
       grid-template-columns: 160px 1fr;
@@ -91,10 +102,16 @@
       margin-bottom: 10px;
     }
 
-    .label { font-weight: 600; color:#555; }
-    .value { color:#111; }
+    .label {
+      font-weight: 600;
+      color:#555;
+    }
 
-    /* Galerie */
+    .value {
+      color:#111;
+    }
+
+    /* GALERIE */
     .photos-grid {
       display:grid;
       grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -118,7 +135,6 @@
       }
       .label { margin-top:10px; }
     }
-
   </style>
 </head>
 
@@ -130,7 +146,7 @@
     <button id="btnEdit" class="btn primary">Modifier</button>
   </div>
 
-  <div id="subtitle" class="muted" style="margin-bottom:20px; color:#666;"></div>
+  <div id="subtitle" style="margin-bottom:20px; color:#666;"></div>
 
   <!-- PHOTO PRINCIPALE -->
   <div class="box">
@@ -138,7 +154,7 @@
     <div id="thumbs" class="thumbs"></div>
   </div>
 
-  <!-- Identification -->
+  <!-- IDENTIFICATION -->
   <div class="box">
     <h2>Identification</h2>
     <div class="grid2">
@@ -150,7 +166,7 @@
     </div>
   </div>
 
-  <!-- Process -->
+  <!-- PROCESS -->
   <div class="box">
     <h2>Process & Suivi</h2>
     <div class="grid2">
@@ -161,7 +177,7 @@
     </div>
   </div>
 
-  <!-- Finance -->
+  <!-- FINANCE -->
   <div class="box">
     <h2>Finance</h2>
     <div class="grid2">
@@ -172,7 +188,7 @@
     </div>
   </div>
 
-  <!-- Délais -->
+  <!-- DELAIS -->
   <div class="box">
     <h2>Délais</h2>
     <div class="grid2">
@@ -182,7 +198,7 @@
     </div>
   </div>
 
-  <!-- Vente -->
+  <!-- VENTE -->
   <div class="box">
     <h2>Vente</h2>
     <div class="grid2">
@@ -191,13 +207,14 @@
     </div>
   </div>
 
-  <!-- Galerie -->
+  <!-- GALERIE -->
   <div class="box">
     <h2>Toutes les photos</h2>
     <div id="gallery" class="photos-grid"></div>
   </div>
 
 </div>
+
 
 <script>
   const supabaseUrl = "https://ghgmifhqgqiqignowred.supabase.co";
@@ -207,32 +224,29 @@
 
   const qs = new URLSearchParams(location.search);
   const recordId = qs.get("id");
-
   const el = id => document.getElementById(id);
 
-async function ensureAuthOrRedirect() {
-  // Premier appel (souvent null sur GitHub Pages)
-  let { data: { session } } = await supabaseClient.auth.getSession();
+  /* 🔐 AUTH : Correction 401 avec restauration session */
+  async function ensureAuthOrRedirect() {
+    // Premier essai (souvent null)
+    let { data: { session } } = await supabaseClient.auth.getSession();
 
-  // Si pas de session → on tente la restauration locale (async)
-  if (!session) {
-    // on attend 150 ms que Supabase restaure le token depuis localStorage
-    await new Promise(r => setTimeout(r, 150));
-    const restored = await supabaseClient.auth.getSession();
+    if (!session) {
+      // ⏳ Attente pour laisser Supabase restaurer la session locale
+      await new Promise(r => setTimeout(r, 150));
 
-    if (!restored.data.session) {
-      location.href = "index.html";
-      return null;
+      let restored = await supabaseClient.auth.getSession();
+      if (!restored.data.session) {
+        location.href = "index.html";
+        return null;
+      }
+      return restored.data.session;
     }
 
-    return restored.data.session;
+    return session;
   }
 
-  return session;
-}
-
-
-  /* Format simple */
+  /* Format date brute */
   function fmt(d) { return d || ""; }
 
   /* Différence en jours */
@@ -241,6 +255,7 @@ async function ensureAuthOrRedirect() {
     return `${Math.round((new Date(b) - new Date(a)) / 86400000)} j`;
   }
 
+  /* 🔥 CHARGER ARTICLE */
   async function loadArticle() {
     const { data, error } = await supabaseClient
       .from("ListeProduit")
@@ -266,8 +281,8 @@ async function ensureAuthOrRedirect() {
     const prix = parseFloat(data.prix_ha) || 0;
     const ca = parseFloat(data.ca_encaisse) || 0;
 
-    el("v_prixha").textContent = prix || "";
-    el("v_ca").textContent = ca || "";
+    el("v_prixha").textContent = prix;
+    el("v_ca").textContent = ca;
     el("v_marge").textContent = (ca - prix).toFixed(2) + " €";
     el("v_coef").textContent = prix > 0 ? (ca / prix).toFixed(2) : "";
 
@@ -281,6 +296,7 @@ async function ensureAuthOrRedirect() {
     await loadPhotos();
   }
 
+  /* 📷 PHOTOS */
   async function loadPhotos() {
     const { data, error } = await supabaseClient
       .from("article_photos")
@@ -338,19 +354,18 @@ async function ensureAuthOrRedirect() {
     }
   }
 
-  /* Bouton modifier */
+  /* Bouton Modifier */
   el("btnEdit").onclick = () => {
     location.href = "modificationarticle.html?id=" + recordId;
   };
 
-  /* Boot */
+  /* 🚀 Boot sécurisé */
   (async () => {
     const session = await ensureAuthOrRedirect();
     if (!session) return;
 
     await loadArticle();
   })();
-
 </script>
 
 </body>
