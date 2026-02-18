@@ -332,10 +332,23 @@
         return;
       }
 
+      // Déterminer si c'est la première photo de l'article
+      const { count, error: countErr } = await supabaseClient
+        .from("article_photos")
+        .select("*", { count: "exact", head: true })
+        .eq("article_id", Number(recordId));
+
+      if (countErr) {
+        el("photosError").textContent = "Erreur vérification photos existantes : " + countErr.message;
+        return;
+      }
+
+      const isMain = (count === 0);
+
       const { error: dbErr } = await supabaseClient
         .from("article_photos")
         .insert([
-          { article_id: Number(recordId), path, is_main: false, sort_order: 0 }
+          { article_id: Number(recordId), path, is_main: isMain, sort_order: 0 }
         ]);
 
       if (dbErr) {
