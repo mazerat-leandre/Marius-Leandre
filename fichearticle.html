@@ -210,15 +210,27 @@
 
   const el = id => document.getElementById(id);
 
-  /* AUTHENTIFICATION (corrige le 401) */
-  async function ensureAuthOrRedirect() {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) {
+async function ensureAuthOrRedirect() {
+  // Premier appel (souvent null sur GitHub Pages)
+  let { data: { session } } = await supabaseClient.auth.getSession();
+
+  // Si pas de session → on tente la restauration locale (async)
+  if (!session) {
+    // on attend 150 ms que Supabase restaure le token depuis localStorage
+    await new Promise(r => setTimeout(r, 150));
+    const restored = await supabaseClient.auth.getSession();
+
+    if (!restored.data.session) {
       location.href = "index.html";
       return null;
     }
-    return session;
+
+    return restored.data.session;
   }
+
+  return session;
+}
+
 
   /* Format simple */
   function fmt(d) { return d || ""; }
