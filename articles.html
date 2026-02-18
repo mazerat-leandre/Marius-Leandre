@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Tabulator (même famille que ton fichier d'origine) -->
+  <!-- Tabulator -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.0/dist/css/tabulator.min.css">
 
   <style>
@@ -23,7 +23,10 @@
       --border:rgba(255,255,255,.12);
       --text:rgba(255,255,255,.92);
       --muted:rgba(255,255,255,.65);
+      --muted2:rgba(255,255,255,.52);
       --accent:#7c5cff;
+      --danger:#ff4d6d;
+      --ok:#2dd4bf;
       --shadow:0 18px 60px rgba(0,0,0,.45);
       --radius:18px;
     }
@@ -39,14 +42,14 @@
         radial-gradient(800px 500px at 60% 120%, rgba(45,212,191,.18), transparent 55%),
         var(--bg);
     }
-    .wrap{max-width:1300px;margin:0 auto;padding:28px 18px 60px}
+    .wrap{max-width:1350px;margin:0 auto;padding:28px 18px 60px}
     .topbar{
-      display:flex;align-items:center;justify-content:space-between;
+      display:flex;align-items:flex-start;justify-content:space-between;
       flex-wrap:wrap;gap:12px;margin-bottom:16px;
     }
     h1{margin:0;font-size:22px;font-weight:900;letter-spacing:.2px}
     .subtitle{color:var(--muted);font-size:13px;margin-top:6px}
-    .actions{display:flex;gap:10px;flex-wrap:wrap}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}
     .btn{
       border:1px solid var(--border);
       background:rgba(255,255,255,.06);
@@ -58,6 +61,15 @@
       cursor:pointer;
     }
     .btn:hover{background:rgba(124,92,255,.22)}
+    .btn.primary{
+      border-color:rgba(124,92,255,.45);
+      background:linear-gradient(135deg, rgba(124,92,255,.35), rgba(33,212,253,.14));
+    }
+    .btn.danger{
+      border-color:rgba(255,77,109,.45);
+      background:rgba(255,77,109,.12);
+    }
+
     .panel{
       background:var(--panel);
       border:1px solid var(--border);
@@ -71,6 +83,8 @@
       padding:14px 16px;
       border-bottom:1px solid var(--border);
       background:rgba(255,255,255,.03);
+      gap:12px;
+      flex-wrap:wrap;
     }
     .panelHeader .h{font-weight:900;font-size:14px}
     .panelBody{padding:14px}
@@ -81,6 +95,61 @@
       color:var(--muted);
       font-weight:800;
     }
+
+    .toolbar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      width:100%;
+    }
+    .search{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04);
+      flex: 1 1 320px;
+      min-width: 260px;
+    }
+    .search input{
+      width:100%;
+      border:none;
+      outline:none;
+      background:transparent;
+      color:var(--text);
+      font-weight:800;
+      font-size:13px;
+    }
+    .search span{color:var(--muted2);font-weight:900}
+
+    .select{
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      font-weight:800;
+      font-size:13px;
+      outline:none;
+    }
+
+    .toggle{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04);
+      font-weight:900;
+      font-size:13px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .toggle input{accent-color:var(--accent); cursor:pointer}
 
     .iconBtn{
       background:rgba(255,255,255,.08);
@@ -100,13 +169,13 @@
       background:rgba(255,77,109,.10);
       color:rgba(255,255,255,.92);
       display:none;
-      font-weight:700;
+      font-weight:800;
       font-size:13px;
       line-height:1.4;
       white-space:pre-wrap;
     }
 
-    /* Tabulator – petite harmonisation dans un thème sombre */
+    /* Tabulator dark harmony */
     .tabulator{
       border:none !important;
       background:transparent !important;
@@ -128,6 +197,21 @@
       background:rgba(255,255,255,.03) !important;
       border-top:1px solid rgba(255,255,255,.10) !important;
     }
+    .tabulator .tabulator-header-filter input{
+      background:rgba(255,255,255,.08) !important;
+      border:1px solid rgba(255,255,255,.15) !important;
+      color:var(--text) !important;
+      border-radius:8px !important;
+      padding:6px 8px !important;
+      font-weight:800 !important;
+      font-size:12px !important;
+    }
+    .tabulator .tabulator-responsive-collapse{
+      background:rgba(255,255,255,.03) !important;
+      border:1px solid rgba(255,255,255,.10) !important;
+      border-radius:14px !important;
+      margin:10px !important;
+    }
   </style>
 </head>
 
@@ -140,17 +224,39 @@
       </div>
       <div class="actions">
         <button class="btn" id="btnHome">Accueil</button>
-        <button class="btn" id="btnAdd">Ajouter</button>
+        <button class="btn primary" id="btnAdd">Ajouter</button>
         <button class="btn" id="btnReload">Recharger</button>
-        <button class="btn" id="btnLogout">Déconnexion</button>
+        <button class="btn danger" id="btnLogout">Déconnexion</button>
       </div>
     </div>
 
     <div class="panel">
       <div class="panelHeader">
         <div class="h">Tableau</div>
-        <div class="chip" id="countChip">0</div>
+        <div class="toolbar">
+          <div class="search">
+            <span>🔎</span>
+            <input id="quickSearch" placeholder="Recherche rapide : article, modèle, couleur, taille, numéro…">
+          </div>
+
+          <select class="select" id="statusFilter">
+            <option value="ALL">Statut : Tous</option>
+            <option value="STOCK">Stock</option>
+            <option value="ONLINE">En ligne</option>
+            <option value="SOLD">Vendu</option>
+          </select>
+
+          <label class="toggle" title="Afficher uniquement les articles rentables (marge > 0)">
+            <input type="checkbox" id="marginPositive">
+            Marge &gt; 0
+          </label>
+
+          <button class="btn" id="btnReset">Reset filtres</button>
+
+          <div class="chip" id="countChip">0</div>
+        </div>
       </div>
+
       <div class="panelBody">
         <div style="overflow-x:auto;">
           <div id="table"></div>
@@ -160,7 +266,6 @@
     </div>
   </div>
 
-  <!-- Libs en bas (ordre garanti) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
 
@@ -169,7 +274,8 @@
     const supabaseKey="sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
     const sb=window.supabase.createClient(supabaseUrl,supabaseKey);
 
-    const el = (id)=>document.getElementById(id);
+    const el=(id)=>document.getElementById(id);
+
     function showError(msg){
       el("err").style.display="block";
       el("err").textContent=msg;
@@ -182,7 +288,7 @@
     async function requireSession(){
       const {data, error} = await sb.auth.getSession();
       if (error) throw error;
-      if (!data.session) {
+      if (!data.session){
         window.location.href="index.html";
         return null;
       }
@@ -190,10 +296,80 @@
       return data.session;
     }
 
+    function toNumber(v){
+      const n = Number(v);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function normalizeStr(v){
+      return (v ?? "").toString().toLowerCase().trim();
+    }
+
+    // Colonne "Statut" calculée (non affichée sur mobile en priorité)
+    function computeStatus(row){
+      // vendu si date_vente existe
+      // en ligne si date_mise_en_ligne existe
+      // sinon stock
+      const dV = row?.date_vente;
+      const dM = row?.date_mise_en_ligne;
+      if (dV) return "VENDU";
+      if (dM) return "EN LIGNE";
+      return "STOCK";
+    }
+
+    function computeMarge(row){
+      const ca = toNumber(row?.ca_encaisse);
+      const prix = toNumber(row?.prix_ha);
+      return ca - prix;
+    }
+
+    // Custom header filter comparison (contains, case-insensitive)
+    function containsFilter(headerValue, rowValue){
+      const hv = normalizeStr(headerValue);
+      if (!hv) return true;
+      return normalizeStr(rowValue).includes(hv);
+    }
+
+    // Custom filters driven by toolbar
+    function applyToolbarFilters(){
+      if (!window.__table) return;
+
+      const q = normalizeStr(el("quickSearch").value);
+      const status = el("statusFilter").value;
+      const onlyPositive = el("marginPositive").checked;
+
+      // Clear any previous custom filters (but keep header filters)
+      window.__table.clearFilter(true); // true => keeps header filters
+
+      // Apply quick search + status + marge>0 using a single function filter
+      window.__table.addFilter((data) => {
+        // Quick search over prioritized fields
+        if (q){
+          const hay = [
+            data.numero, data.article, data.taille, data.couleur, data.modele,
+            data.qui, data.client_id
+          ].map(normalizeStr).join(" | ");
+          if (!hay.includes(q)) return false;
+        }
+
+        // Status filter
+        const st = computeStatus(data);
+        if (status === "SOLD" && st !== "VENDU") return false;
+        if (status === "ONLINE" && st !== "EN LIGNE") return false;
+        if (status === "STOCK" && st !== "STOCK") return false;
+
+        // Margin positive
+        if (onlyPositive){
+          const m = computeMarge(data);
+          if (!(m > 0)) return false;
+        }
+
+        return true;
+      });
+    }
+
     function buildTable(){
-      if (!window.Tabulator){
-        throw new Error("Tabulator n'est pas chargé (CDN bloqué ou erreur réseau).");
-      }
+      if (!window.Tabulator) throw new Error("Tabulator non chargé (CDN bloqué).");
 
       return new Tabulator("#table", {
         layout:"fitColumns",
@@ -203,9 +379,11 @@
         pagination:"local",
         paginationSize:20,
 
-        height:"650px",
+        height:"680px",
+        placeholder:"Aucune donnée",
 
         columns:[
+          // Priorités max (toujours visibles)
           {
             title:"",
             width:52,
@@ -241,20 +419,67 @@
             responsive:0
           },
 
-          {title:"Article", field:"article", responsive:1},
-          {title:"Taille", field:"taille", responsive:2},
-          {title:"Couleur", field:"couleur", responsive:3},
-          {title:"Modèle", field:"modele", responsive:4},
+          // Colonnes prioritaires demandées
+          {
+            title:"Article",
+            field:"article",
+            headerFilter:"input",
+            headerFilterFunc:containsFilter,
+            responsive:1
+          },
+          {
+            title:"Taille",
+            field:"taille",
+            headerFilter:"input",
+            headerFilterFunc:containsFilter,
+            responsive:2
+          },
+          {
+            title:"Couleur",
+            field:"couleur",
+            headerFilter:"input",
+            headerFilterFunc:containsFilter,
+            responsive:3
+          },
+          {
+            title:"Modèle",
+            field:"modele",
+            headerFilter:"input",
+            headerFilterFunc:containsFilter,
+            responsive:4
+          },
 
-          // Le reste en priorité faible (mobile => collapse)
-          {title:"Numéro", field:"numero", responsive:8},
-          {title:"Date HA", field:"date_ha", responsive:9},
-          {title:"Date mise en ligne", field:"date_mise_en_ligne", responsive:10},
-          {title:"Date vente", field:"date_vente", responsive:11},
-          {title:"Prix HA", field:"prix_ha", responsive:12},
-          {title:"CA encaissé", field:"ca_encaisse", responsive:13},
-          {title:"Qui", field:"qui", responsive:14},
-          {title:"Client", field:"client_id", responsive:15},
+          // Statut & marge (utile en desktop, collapse en mobile)
+          {
+            title:"Statut",
+            field:"__status",
+            sorter:"string",
+            headerFilter:"input",
+            headerFilterFunc:containsFilter,
+            responsive:7
+          },
+          {
+            title:"Marge",
+            field:"__marge",
+            sorter:"number",
+            hozAlign:"right",
+            formatter:(cell)=>{
+              const v = toNumber(cell.getValue());
+              const sign = v > 0 ? "+" : "";
+              return sign + v.toFixed(2);
+            },
+            responsive:8
+          },
+
+          // Autres colonnes (faible priorité)
+          {title:"Numéro", field:"numero", headerFilter:"input", headerFilterFunc:containsFilter, responsive:9},
+          {title:"Date HA", field:"date_ha", headerFilter:"input", headerFilterFunc:containsFilter, responsive:10},
+          {title:"Date mise en ligne", field:"date_mise_en_ligne", headerFilter:"input", headerFilterFunc:containsFilter, responsive:11},
+          {title:"Date vente", field:"date_vente", headerFilter:"input", headerFilterFunc:containsFilter, responsive:12},
+          {title:"Prix HA", field:"prix_ha", headerFilter:"input", headerFilterFunc:containsFilter, responsive:13},
+          {title:"CA encaissé", field:"ca_encaisse", headerFilter:"input", headerFilterFunc:containsFilter, responsive:14},
+          {title:"Qui", field:"qui", headerFilter:"input", headerFilterFunc:containsFilter, responsive:15},
+          {title:"Client", field:"client_id", headerFilter:"input", headerFilterFunc:containsFilter, responsive:16},
         ],
       });
     }
@@ -262,6 +487,7 @@
     async function loadData(table){
       clearError();
 
+      // Select minimal fields
       const {data, error} = await sb
         .from("ListeProduit")
         .select("id, numero, article, taille, modele, couleur, date_ha, date_mise_en_ligne, date_vente, prix_ha, ca_encaisse, qui, client_id")
@@ -270,11 +496,20 @@
 
       if (error) throw error;
 
-      table.setData(data || []);
-      el("countChip").textContent = String((data || []).length);
+      const rows = (data || []).map(r => {
+        const status = computeStatus(r);
+        const marge = computeMarge(r);
+        return { ...r, __status: status, __marge: marge };
+      });
+
+      table.setData(rows);
+      el("countChip").textContent = String(rows.length);
+
+      // Apply toolbar filters after load
+      applyToolbarFilters();
     }
 
-    // Buttons
+    // Buttons & toolbar events
     el("btnHome").addEventListener("click", ()=>window.location.href="index.html");
     el("btnAdd").addEventListener("click", ()=>window.location.href="admin.html");
     el("btnReload").addEventListener("click", async ()=>{
@@ -291,13 +526,31 @@
       window.location.href="index.html";
     });
 
+    el("quickSearch").addEventListener("input", () => applyToolbarFilters());
+    el("statusFilter").addEventListener("change", () => applyToolbarFilters());
+    el("marginPositive").addEventListener("change", () => applyToolbarFilters());
+
+    el("btnReset").addEventListener("click", ()=>{
+      // reset toolbar
+      el("quickSearch").value = "";
+      el("statusFilter").value = "ALL";
+      el("marginPositive").checked = false;
+
+      // reset header filters
+      window.__table.clearHeaderFilter();
+
+      // reset custom filters
+      window.__table.clearFilter(true);
+
+      // re-apply (none)
+      applyToolbarFilters();
+    });
+
     (async function main(){
       try{
-        console.log("articles.html: start");
         await requireSession();
         window.__table = buildTable();
         await loadData(window.__table);
-        console.log("articles.html: ok");
       }catch(err){
         console.error(err);
         showError("Erreur chargement : " + (err?.message || err));
