@@ -1,468 +1,286 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Projet Léandre - Modification article</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Modification article</title>
 
-  <style>
-    body { font-family: Arial, sans-serif; margin: 40px; max-width: 980px; }
-    .topbar { display:flex; justify-content:space-between; align-items:center; gap:12px; }
-    .box { border: 1px solid #ddd; border-radius: 10px; padding: 18px; margin-top: 16px; }
-    .grid { display:grid; grid-template-columns: 220px 1fr; gap: 10px 14px; align-items:center; }
-    label { font-weight: 600; }
-    input { padding: 10px; border: 1px solid #ddd; border-radius: 8px; width: 100%; box-sizing: border-box; }
-    .actions { display:flex; gap:10px; justify-content:flex-end; margin-top: 16px; flex-wrap: wrap; }
-    button { padding: 10px 14px; cursor: pointer; border-radius: 10px; border: 1px solid #ccc; background: #f7f7f7; }
-    button.primary { background:#111; color:#fff; border-color:#111; }
-    .muted { color:#666; font-size: 0.95em; }
-    .error { color:#b00020; }
-    .ok { color:#0a7a0a; }
-    .readonly { background:#f6f6f6; }
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-    /* Photos */
-    .photos-bar { display:flex; gap:10px; align-items:center; flex-wrap: wrap; }
-    .photos-grid {
-      display:grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 12px;
-    }
-    .photo-card {
-      border: 1px solid #e3e3e3;
-      border-radius: 10px;
-      padding: 10px;
-      display:flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .photo-card img {
-      width: 100%;
-      height: 160px;
-      object-fit: cover;
-      border-radius: 8px;
-      background: #f3f3f3;
-    }
-    .photo-actions {
-      display:flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    @media (max-width: 900px) {
-      .photos-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-  </style>
+<style>
+:root{
+  --bg:#0b1220;
+  --panel:rgba(255,255,255,.06);
+  --border:rgba(255,255,255,.12);
+  --text:rgba(255,255,255,.92);
+  --muted:rgba(255,255,255,.65);
+  --accent:#7c5cff;
+  --shadow:0 18px 60px rgba(0,0,0,.45);
+  --radius:18px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,sans-serif;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(124,92,255,.35), transparent 55%),
+    radial-gradient(900px 500px at 95% 0%, rgba(33,212,253,.22), transparent 55%),
+    var(--bg);
+  color:var(--text);
+  min-height:100vh;
+}
+.wrap{max-width:1150px;margin:auto;padding:30px 20px}
+.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:20px}
+@media(max-width:950px){.grid{grid-template-columns:1fr}}
+.panel{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.panelHeader{
+  padding:15px 20px;
+  font-weight:700;
+  border-bottom:1px solid var(--border);
+}
+.gallery{padding:20px}
+.hero{
+  aspect-ratio:4/3;
+  border-radius:16px;
+  overflow:hidden;
+  background:#111;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.hero img{width:100%;height:100%;object-fit:cover}
+.thumbs{display:flex;gap:10px;margin-top:15px;overflow:auto}
+.thumb{
+  width:70px;height:55px;
+  border-radius:10px;
+  overflow:hidden;
+  cursor:pointer;
+  border:2px solid transparent;
+}
+.thumb.active{border-color:var(--accent)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+
+.cards{padding:20px;display:grid;gap:18px}
+.card{
+  background:rgba(255,255,255,.05);
+  padding:15px;
+  border-radius:15px;
+  border:1px solid rgba(255,255,255,.08);
+}
+.cardTitle{font-weight:800;margin-bottom:12px;font-size:14px}
+
+.row{display:flex;flex-direction:column;margin-bottom:10px}
+label{font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+input{
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.08);
+  color:white;
+}
+input:focus{outline:none;border-color:var(--accent)}
+
+.btn{
+  padding:10px 14px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.06);
+  color:white;
+  cursor:pointer;
+  font-weight:600;
+}
+.btn.primary{background:var(--accent);border:none}
+.btn.danger{background:#ff4d6d;border:none}
+.actions{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap}
+
+.calcBox{
+  font-weight:700;
+  margin-top:6px;
+}
+</style>
 </head>
 <body>
 
-  <div class="topbar">
-    <h1>Modification article</h1>
-    <div>
-      <button id="btnBack">Retour articles</button>
-      <button id="btnLogout">Se déconnecter</button>
-    </div>
-  </div>
-
-  <div class="box">
-    <div id="status" class="muted">Chargement…</div>
-    <div id="msg" style="margin-top:10px;"></div>
-
-    <!-- FORMULAIRE ARTICLE -->
-    <div id="form" style="display:none; margin-top:16px;">
-      <div class="grid">
-        <label>ID (technique)</label>
-        <input id="id" class="readonly" readonly />
-
-        <label>Numero</label>
-        <input id="numero" />
-
-        <label>Article</label>
-        <input id="article" />
-
-        <label>Taille</label>
-        <input id="taille" />
-
-        <label>Modèle</label>
-        <input id="modele" />
-
-        <label>Couleur</label>
-        <input id="couleur" />
-
-        <label>Date HA</label>
-        <input id="date_ha" placeholder="YYYY-MM-DD" />
-
-        <label>Date mise en ligne</label>
-        <input id="date_mise_en_ligne" placeholder="YYYY-MM-DD" />
-
-        <label>Date vente</label>
-        <input id="date_vente" placeholder="YYYY-MM-DD" />
-
-        <label>Prix HA</label>
-        <input id="prix_ha" placeholder="ex: 36.59" />
-
-        <label>CA encaissé</label>
-        <input id="ca_encaisse" placeholder="ex: 49.90" />
-
-        <label>Client</label>
-        <input id="client_id" />
-
-        <label>Date réception</label>
-        <input id="date_recep" placeholder="YYYY-MM-DD" />
-
-        <label>Qui</label>
-        <input id="qui" />
-      </div>
-
-      <div class="actions">
-        <button id="btnCancel">Annuler</button>
-        <button id="btnSave" class="primary">Enregistrer</button>
-        <button id="btnClose">Fermer</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- PHOTOS -->
-  <div class="box" id="photosBox" style="display:none;">
-    <h2 style="margin-top:0;">Photos</h2>
-
-    <div class="photos-bar">
-      <input type="file" id="photoFile" accept="image/*" />
-      <button id="btnUpload" class="primary">Uploader</button>
-      <span id="photosStatus" class="muted"></span>
-    </div>
-
-    <div id="photosError" class="error" style="margin-top:10px;"></div>
-    <div id="photosGrid" class="photos-grid"></div>
-  </div>
-
-  <script>
-    const supabaseUrl = "https://ghgmifhqgqiqignowred.supabase.co";
-    const supabaseKey = "sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
-    const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-    const BUCKET = "Article-photos";  // ⚠️ le nom EXACT du bucket
-
-    const el = (id) => document.getElementById(id);
-    const msg = (html) => { el("msg").innerHTML = html || ""; };
-
-    const qs = new URLSearchParams(location.search);
-    const recordId = qs.get("id");
-
-    let original = null;
-
-    // Vérifier authentification
-    async function ensureAuthOrRedirect() {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session) {
-        location.href = "index.html";
-        return null;
-      }
-      return session;
-    }
-
-    // Remplir formulaire
-    function setFormValues(row) {
-      el("id").value = row.id ?? "";
-      el("numero").value = row.numero ?? row.Numero ?? "";
-      el("article").value = row.article ?? "";
-      el("taille").value = row.taille ?? "";
-      el("modele").value = row.modele ?? "";
-      el("couleur").value = row.couleur ?? "";
-      el("date_ha").value = row.date_ha ?? "";
-      el("date_mise_en_ligne").value = row.date_mise_en_ligne ?? "";
-      el("date_vente").value = row.date_vente ?? "";
-      el("prix_ha").value = row.prix_ha ?? "";
-      el("ca_encaisse").value = row.ca_encaisse ?? "";
-      el("client_id").value = row.client_id ?? "";
-      el("date_recep").value = row.date_recep ?? "";
-      el("qui").value = row.qui ?? "";
-    }
-
-    // Form payload
-    function getPayload() {
-      return {
-        numero: el("numero").value.trim() || null,
-        article: el("article").value.trim() || null,
-        taille: el("taille").value.trim() || null,
-        modele: el("modele").value.trim() || null,
-        couleur: el("couleur").value.trim() || null,
-        date_ha: el("date_ha").value.trim() || null,
-        date_mise_en_ligne: el("date_mise_en_ligne").value.trim() || null,
-        date_vente: el("date_vente").value.trim() || null,
-        prix_ha: el("prix_ha").value.trim() || null,
-        ca_encaisse: el("ca_encaisse").value.trim() || null,
-        client_id: el("client_id").value.trim() || null,
-        date_recep: el("date_recep").value.trim() || null,
-        qui: el("qui").value.trim() || null,
-      };
-    }
-
-    // Charger article
-    async function loadRecord() {
-      if (!recordId) {
-        el("status").textContent = "Erreur : id manquant.";
-        msg(`<p class="error">Aucun ID fourni dans l’URL.</p>`);
-        return false;
-      }
-
-      el("status").textContent = "Chargement…";
-
-      const { data, error } = await supabaseClient
-        .from("ListeProduit")
-        .select("*")
-        .eq("id", recordId)
-        .single();
-
-      if (error) {
-        msg(`<p class="error">Erreur : ${error.message}</p>`);
-        return false;
-      }
-
-      original = data;
-      setFormValues(data);
-
-      el("form").style.display = "";
-      el("photosBox").style.display = "";
-      el("status").textContent = "Article chargé.";
-
-      return true;
-    }
-
-    // Enregistrer article
-    async function saveRecord() {
-      msg("");
-
-      const payload = getPayload();
-
-      const { error } = await supabaseClient
-        .from("ListeProduit")
-        .update(payload)
-        .eq("id", recordId);
-
-      if (error) {
-        msg(`<p class="error">${error.message}</p>`);
-        return;
-      }
-
-      msg(`<p class="ok">Modifications enregistrées.</p>`);
-      await loadRecord();
-    }
-
-    /************* COMPRESSION PHOTO *************/
-    async function compressImage(file, options = {}) {
-      const {
-        maxSize = 480,
-        quality = 0.40,
-        mimeType = "image/jpeg"
-      } = options;
-
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-
-      const img = await new Promise((resolve, reject) => {
-        const i = new Image();
-        i.onload = () => resolve(i);
-        i.onerror = reject;
-        i.src = dataUrl;
-      });
-
-      let { width, height } = img;
-
-      const ratio = Math.min(maxSize / width, maxSize / height, 1);
-      width = Math.floor(width * ratio);
-      height = Math.floor(height * ratio);
-
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0, width, height);
-
-      const blob = await new Promise((resolve, reject) => {
-        canvas.toBlob(
-          (b) => b ? resolve(b) : reject(new Error("Compression impossible")),
-          mimeType,
-          quality
-        );
-      });
-
-      return blob;
-    }
-
-    /************* UPLOAD PHOTO *************/
-    async function uploadPhoto() {
-      el("photosError").textContent = "";
-
-      const file = el("photoFile").files?.[0];
-      if (!file) {
-        el("photosError").textContent = "Aucun fichier choisi.";
-        return;
-      }
-
-      el("photosStatus").textContent = "Compression…";
-
-      let blob;
-      try {
-        blob = await compressImage(file);
-      } catch (e) {
-        el("photosError").textContent = "Erreur compression : " + e.message;
-        return;
-      }
-
-      const filename = `${Date.now()}_${Math.random().toString(16).slice(2)}.jpg`;
-      const path = `articles/${recordId}/${filename}`;
-
-      el("photosStatus").textContent = "Upload…";
-
-      const { error: uploadErr } = await supabaseClient
-        .storage
-        .from(BUCKET)
-        .upload(path, blob, {
-          contentType: "image/jpeg",
-          upsert: false
-        });
-
-      if (uploadErr) {
-        el("photosError").textContent = "Erreur upload : " + uploadErr.message;
-        return;
-      }
-
-      // Déterminer si c'est la première photo de l'article
-      const { count, error: countErr } = await supabaseClient
-        .from("article_photos")
-        .select("*", { count: "exact", head: true })
-        .eq("article_id", Number(recordId));
-
-      if (countErr) {
-        el("photosError").textContent = "Erreur vérification photos existantes : " + countErr.message;
-        return;
-      }
-
-      const isMain = (count === 0);
-
-      const { error: dbErr } = await supabaseClient
-        .from("article_photos")
-        .insert([
-          { article_id: Number(recordId), path, is_main: isMain, sort_order: 0 }
-        ]);
-
-      if (dbErr) {
-        el("photosError").textContent = "Erreur DB : " + dbErr.message;
-        return;
-      }
-
-      el("photoFile").value = "";
-      el("photosStatus").textContent = "OK";
-
-      await loadPhotos();
-    }
-
-    /************* CHARGER PHOTOS *************/
-    async function loadPhotos() {
-      el("photosError").textContent = "";
-      el("photosStatus").textContent = "Chargement…";
-      el("photosGrid").innerHTML = "";
-
-      const { data, error } = await supabaseClient
-        .from("article_photos")
-        .select("*")
-        .eq("article_id", recordId)
-        .order("is_main", { ascending: false })
-        .order("sort_order", { ascending: true });
-
-      if (error) {
-        el("photosError").textContent = "Erreur lecture : " + error.message;
-        return;
-      }
-
-      if (!data.length) {
-        el("photosStatus").textContent = "Aucune photo";
-        return;
-      }
-
-      el("photosStatus").textContent = `${data.length} photo(s)`;
-
-      for (const p of data) {
-        const { data: signed } = await supabaseClient
-          .storage
-          .from(BUCKET)
-          .createSignedUrl(p.path, 3600);
-
-        const div = document.createElement("div");
-        div.className = "photo-card";
-
-        const img = document.createElement("img");
-        img.src = signed.signedUrl;
-
-        const meta = document.createElement("div");
-        meta.className = "muted";
-        meta.textContent = p.is_main ? "Photo principale" : "";
-
-        const actions = document.createElement("div");
-        actions.className = "photo-actions";
-
-        const btnMain = document.createElement("button");
-        btnMain.textContent = "Principale";
-        btnMain.disabled = p.is_main;
-        btnMain.onclick = () => setMainPhoto(p.id);
-
-        const btnDelete = document.createElement("button");
-        btnDelete.textContent = "Supprimer";
-        btnDelete.onclick = () => deletePhoto(p.id, p.path);
-
-        actions.appendChild(btnMain);
-        actions.appendChild(btnDelete);
-
-        div.appendChild(img);
-        div.appendChild(meta);
-        div.appendChild(actions);
-
-        el("photosGrid").appendChild(div);
-      }
-    }
-
-    /* Photo principale */
-    async function setMainPhoto(photoId) {
-      await supabaseClient.from("article_photos").update({ is_main: false }).eq("article_id", recordId);
-      await supabaseClient.from("article_photos").update({ is_main: true }).eq("id", photoId);
-      await loadPhotos();
-    }
-
-    /* Supprimer photo */
-    async function deletePhoto(photoId, path) {
-      await supabaseClient.storage.from(BUCKET).remove([path]);
-      await supabaseClient.from("article_photos").delete().eq("id", photoId);
-      await loadPhotos();
-    }
-
-    /* Boutons navigation */
-    el("btnBack").onclick = () => location.href = "articles.html";
-    el("btnClose").onclick = () => location.href = "articles.html";
-    el("btnCancel").onclick = () => setFormValues(original);
-    el("btnSave").onclick = saveRecord;
-    el("btnUpload").onclick = uploadPhoto;
-
-    el("btnLogout").onclick = async () => {
-      await supabaseClient.auth.signOut();
-      location.href = "index.html";
-    };
-
-    /* Boot */
-    (async () => {
-      const session = await ensureAuthOrRedirect();
-      if (!session) return;
-
-      const ok = await loadRecord();
-      if (!ok) return;
-
-      await loadPhotos();
-    })();
-  </script>
-
+<div class="wrap">
+<div class="grid">
+
+<!-- Photos -->
+<div class="panel">
+<div class="panelHeader">Photos</div>
+<div class="gallery">
+<div class="hero" id="hero">Aucune photo</div>
+<div class="thumbs" id="thumbs"></div>
+
+<input type="file" id="photoInput" accept="image/*" style="margin-top:15px">
+</div>
+</div>
+
+<!-- Formulaire -->
+<div class="panel">
+<div class="panelHeader">Modification article</div>
+<div class="cards">
+
+<div class="card">
+<div class="cardTitle">Identité produit</div>
+<div class="row"><label>Numéro</label><input id="numero"></div>
+<div class="row"><label>Article</label><input id="article"></div>
+<div class="row"><label>Taille</label><input id="taille"></div>
+<div class="row"><label>Modèle</label><input id="modele"></div>
+<div class="row"><label>Couleur</label><input id="couleur"></div>
+</div>
+
+<div class="card">
+<div class="cardTitle">Dates & suivi</div>
+<div class="row"><label>Date HA</label><input type="date" id="date_ha"></div>
+<div class="row"><label>Date mise en ligne</label><input type="date" id="date_mise_en_ligne"></div>
+<div class="row"><label>Date vente</label><input type="date" id="date_vente"></div>
+<div class="row"><label>Qui</label><input id="qui"></div>
+</div>
+
+<div class="card">
+<div class="cardTitle">Financier</div>
+<div class="row"><label>Prix HA</label><input type="number" id="prix_ha"></div>
+<div class="row"><label>CA encaissé</label><input type="number" id="ca_encaisse"></div>
+<div class="calcBox" id="calc_financier"></div>
+</div>
+
+<div class="card">
+<div class="cardTitle">Client & réception</div>
+<div class="row"><label>Client</label><input id="client_id"></div>
+<div class="row"><label>Date réception</label><input type="date" id="date_recep"></div>
+</div>
+
+<div class="actions">
+<button class="btn primary" id="saveBtn">Enregistrer</button>
+<button class="btn danger" id="deleteBtn">Supprimer</button>
+<button class="btn" onclick="window.location='articles.html'">Retour</button>
+</div>
+
+</div>
+</div>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const supabaseUrl="https://ghgmifhqgqiqignowred.supabase.co";
+const supabaseKey="sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
+const sb=window.supabase.createClient(supabaseUrl,supabaseKey);
+
+const id=new URLSearchParams(location.search).get("id");
+if(!id) location.href="articles.html";
+
+async function requireSession(){
+ const {data}=await sb.auth.getSession();
+ if(!data.session) location.href="index.html";
+}
+requireSession();
+
+function el(id){return document.getElementById(id)}
+
+function calc(){
+ const prix=parseFloat(el("prix_ha").value)||0;
+ const ca=parseFloat(el("ca_encaisse").value)||0;
+ const marge=ca-prix;
+ const coef=(prix>0&&ca>0)?(ca/prix):0;
+ el("calc_financier").innerHTML=
+   "Marge : "+marge.toFixed(2)+" €<br>Coef : "+coef.toFixed(2);
+}
+el("prix_ha").addEventListener("input",calc);
+el("ca_encaisse").addEventListener("input",calc);
+
+async function load(){
+ const {data}=await sb.from("ListeProduit").select("*").eq("id",id).single();
+ if(!data) return;
+
+ Object.keys(data).forEach(k=>{
+   if(el(k)) el(k).value=data[k]||"";
+ });
+ calc();
+ loadPhotos();
+}
+load();
+
+async function loadPhotos(){
+ const {data}=await sb.from("article_photos")
+ .select("*").eq("article_id",id)
+ .order("is_main",{ascending:false});
+
+ const hero=el("hero");
+ const thumbs=el("thumbs");
+ thumbs.innerHTML="";
+ if(!data||!data.length){hero.innerHTML="Aucune photo";return;}
+
+ const main=data.find(p=>p.is_main)||data[0];
+ const {data:url}=await sb.storage.from("Article-photos")
+ .createSignedUrl(main.path,3600);
+
+ hero.innerHTML="<img src='"+url.signedUrl+"'>";
+
+ for(const p of data){
+   const {data:u}=await sb.storage.from("Article-photos")
+   .createSignedUrl(p.path,3600);
+   const d=document.createElement("div");
+   d.className="thumb"+(p.id===main.id?" active":"");
+   d.innerHTML="<img src='"+u.signedUrl+"'>";
+   d.onclick=()=>hero.innerHTML="<img src='"+u.signedUrl+"'>";
+   thumbs.appendChild(d);
+ }
+}
+
+el("photoInput").addEventListener("change",async e=>{
+ const file=e.target.files[0];
+ if(!file) return;
+
+ const path="articles/"+id+"/"+Date.now()+"_"+file.name;
+ await sb.storage.from("Article-photos").upload(path,file);
+
+ const {count}=await sb.from("article_photos")
+ .select("*",{count:"exact",head:true})
+ .eq("article_id",id);
+
+ await sb.from("article_photos").insert({
+   article_id:id,
+   path,
+   is_main:count===0,
+   sort_order:0
+ });
+
+ loadPhotos();
+});
+
+el("saveBtn").onclick=async ()=>{
+ const payload={
+   numero:el("numero").value,
+   article:el("article").value,
+   taille:el("taille").value,
+   modele:el("modele").value,
+   couleur:el("couleur").value,
+   date_ha:el("date_ha").value,
+   date_mise_en_ligne:el("date_mise_en_ligne").value,
+   date_vente:el("date_vente").value,
+   qui:el("qui").value,
+   prix_ha:el("prix_ha").value,
+   ca_encaisse:el("ca_encaisse").value,
+   client_id:el("client_id").value,
+   date_recep:el("date_recep").value
+ };
+ await sb.from("ListeProduit").update(payload).eq("id",id);
+ alert("Enregistré");
+};
+
+el("deleteBtn").onclick=async ()=>{
+ if(!confirm("Supprimer cet article ?")) return;
+ await sb.from("ListeProduit").delete().eq("id",id);
+ location.href="articles.html";
+};
+</script>
 </body>
 </html>
