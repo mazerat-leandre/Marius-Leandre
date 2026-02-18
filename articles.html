@@ -1,196 +1,308 @@
 <!doctype html>
 <html lang="fr">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Liste des articles</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Articles</title>
 
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<link href="https://unpkg.com/tabulator-tables@5.6.4/dist/css/tabulator_midnight.min.css" rel="stylesheet">
-<script src="https://unpkg.com/tabulator-tables@5.6.4/dist/js/tabulator.min.js"></script>
+  <!-- Tabulator (même famille que ton fichier d'origine) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.0/dist/css/tabulator.min.css">
 
-<style>
-:root{
-  --bg:#0b1220;
-  --panel:rgba(255,255,255,.06);
-  --border:rgba(255,255,255,.12);
-  --text:rgba(255,255,255,.92);
-  --muted:rgba(255,255,255,.65);
-  --accent:#7c5cff;
-  --shadow:0 18px 60px rgba(0,0,0,.45);
-  --radius:18px;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:Inter,sans-serif;
-  color:var(--text);
-  min-height:100vh;
-  background:
-    radial-gradient(1200px 600px at 10% -10%, rgba(124,92,255,.35), transparent 55%),
-    radial-gradient(900px 500px at 95% 0%, rgba(33,212,253,.22), transparent 55%),
-    var(--bg);
-}
-.wrap{
-  max-width:1300px;
-  margin:auto;
-  padding:30px 20px;
-}
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:10px;
-  margin-bottom:20px;
-}
-h1{
-  margin:0;
-  font-size:22px;
-  font-weight:800;
-}
-.actions{
-  display:flex;
-  gap:10px;
-}
-.btn{
-  padding:10px 14px;
-  border-radius:12px;
-  border:1px solid var(--border);
-  background:rgba(255,255,255,.08);
-  color:white;
-  font-weight:700;
-  cursor:pointer;
-}
-.btn:hover{
-  background:rgba(124,92,255,.35);
-}
-.panel{
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  padding:15px;
-  box-shadow:var(--shadow);
-  backdrop-filter:blur(12px);
-}
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:rgba(255,255,255,.06);
+      --border:rgba(255,255,255,.12);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.65);
+      --accent:#7c5cff;
+      --shadow:0 18px 60px rgba(0,0,0,.45);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      min-height:100vh;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(124,92,255,.35), transparent 55%),
+        radial-gradient(900px 500px at 95% 0%, rgba(33,212,253,.22), transparent 55%),
+        radial-gradient(800px 500px at 60% 120%, rgba(45,212,191,.18), transparent 55%),
+        var(--bg);
+    }
+    .wrap{max-width:1300px;margin:0 auto;padding:28px 18px 60px}
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;
+      flex-wrap:wrap;gap:12px;margin-bottom:16px;
+    }
+    h1{margin:0;font-size:22px;font-weight:900;letter-spacing:.2px}
+    .subtitle{color:var(--muted);font-size:13px;margin-top:6px}
+    .actions{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      font-weight:800;
+      font-size:13px;
+      cursor:pointer;
+    }
+    .btn:hover{background:rgba(124,92,255,.22)}
+    .panel{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      backdrop-filter: blur(12px);
+    }
+    .panelHeader{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:14px 16px;
+      border-bottom:1px solid var(--border);
+      background:rgba(255,255,255,.03);
+    }
+    .panelHeader .h{font-weight:900;font-size:14px}
+    .panelBody{padding:14px}
+    .chip{
+      font-size:12px; padding:6px 10px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.05);
+      color:var(--muted);
+      font-weight:800;
+    }
 
-.iconBtn{
-  background:rgba(255,255,255,.08);
-  border:1px solid rgba(255,255,255,.15);
-  border-radius:8px;
-  cursor:pointer;
-  font-size:14px;
-  padding:6px 8px;
-}
-.iconBtn:hover{
-  background:rgba(124,92,255,.35);
-}
-</style>
+    .iconBtn{
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.15);
+      border-radius:10px;
+      cursor:pointer;
+      font-size:14px;
+      padding:6px 9px;
+    }
+    .iconBtn:hover{background:rgba(124,92,255,.25)}
+
+    .errorBox{
+      margin-top:14px;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,77,109,.35);
+      background:rgba(255,77,109,.10);
+      color:rgba(255,255,255,.92);
+      display:none;
+      font-weight:700;
+      font-size:13px;
+      line-height:1.4;
+      white-space:pre-wrap;
+    }
+
+    /* Tabulator – petite harmonisation dans un thème sombre */
+    .tabulator{
+      border:none !important;
+      background:transparent !important;
+      color:var(--text) !important;
+    }
+    .tabulator .tabulator-header{
+      background:rgba(255,255,255,.04) !important;
+      border-bottom:1px solid rgba(255,255,255,.10) !important;
+    }
+    .tabulator .tabulator-row{
+      background:rgba(255,255,255,.02) !important;
+      border-bottom:1px solid rgba(255,255,255,.06) !important;
+    }
+    .tabulator .tabulator-row:hover{
+      background:rgba(124,92,255,.10) !important;
+    }
+    .tabulator .tabulator-cell{border-right:1px solid rgba(255,255,255,.05) !important;}
+    .tabulator .tabulator-footer{
+      background:rgba(255,255,255,.03) !important;
+      border-top:1px solid rgba(255,255,255,.10) !important;
+    }
+  </style>
 </head>
 
 <body>
-<div class="wrap">
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1>Liste des articles</h1>
+        <div class="subtitle" id="sub">—</div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btnHome">Accueil</button>
+        <button class="btn" id="btnAdd">Ajouter</button>
+        <button class="btn" id="btnReload">Recharger</button>
+        <button class="btn" id="btnLogout">Déconnexion</button>
+      </div>
+    </div>
 
-<div class="topbar">
-  <h1>Liste des articles</h1>
-  <div class="actions">
-    <button class="btn" onclick="window.location='index.html'">Accueil</button>
-    <button class="btn" onclick="window.location='admin.html'">Ajouter</button>
+    <div class="panel">
+      <div class="panelHeader">
+        <div class="h">Tableau</div>
+        <div class="chip" id="countChip">0</div>
+      </div>
+      <div class="panelBody">
+        <div style="overflow-x:auto;">
+          <div id="table"></div>
+        </div>
+        <div class="errorBox" id="err"></div>
+      </div>
+    </div>
   </div>
-</div>
 
-<div class="panel">
-  <div style="overflow-x:auto;">
-    <div id="table"></div>
-  </div>
-</div>
+  <!-- Libs en bas (ordre garanti) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
 
-</div>
+  <script>
+    const supabaseUrl="https://ghgmifhqgqiqignowred.supabase.co";
+    const supabaseKey="sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
+    const sb=window.supabase.createClient(supabaseUrl,supabaseKey);
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
+    const el = (id)=>document.getElementById(id);
+    function showError(msg){
+      el("err").style.display="block";
+      el("err").textContent=msg;
+    }
+    function clearError(){
+      el("err").style.display="none";
+      el("err").textContent="";
+    }
 
-const supabaseUrl="https://ghgmifhqgqiqignowred.supabase.co";
-const supabaseKey="sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
-const sb=window.supabase.createClient(supabaseUrl,supabaseKey);
+    async function requireSession(){
+      const {data, error} = await sb.auth.getSession();
+      if (error) throw error;
+      if (!data.session) {
+        window.location.href="index.html";
+        return null;
+      }
+      el("sub").textContent = "Connecté : " + (data.session.user?.email || "—");
+      return data.session;
+    }
 
-async function requireSession(){
-  const {data}=await sb.auth.getSession();
-  if(!data.session) window.location="index.html";
-}
-requireSession();
+    function buildTable(){
+      if (!window.Tabulator){
+        throw new Error("Tabulator n'est pas chargé (CDN bloqué ou erreur réseau).");
+      }
 
-var table = new Tabulator("#table", {
-    layout:"fitColumns",
-    responsiveLayout:"collapse",
-    responsiveLayoutCollapseStartOpen:false,
-    pagination:"local",
-    paginationSize:20,
-    movableColumns:true,
-    height:"600px",
-    columns:[
+      return new Tabulator("#table", {
+        layout:"fitColumns",
+        responsiveLayout:"collapse",
+        responsiveLayoutCollapseStartOpen:false,
 
-        {
+        pagination:"local",
+        paginationSize:20,
+
+        height:"650px",
+
+        columns:[
+          {
             title:"",
-            width:50,
+            width:52,
             hozAlign:"center",
             headerSort:false,
-            formatter:() => "<button class='iconBtn'>👁</button>",
-            cellClick:function(e,cell){
-                const row = cell.getRow().getData();
-                window.location="fichearticle.html?id="+row.id;
+            formatter:() => "<button class='iconBtn' title='Voir'>👁</button>",
+            cellClick:(e,cell)=>{
+              const row = cell.getRow().getData();
+              const id = row?.id;
+              if (id === undefined || id === null || id === "") {
+                alert("ID manquant sur cette ligne.");
+                return;
+              }
+              window.location.href = "fichearticle.html?id=" + encodeURIComponent(id);
             },
             responsive:0
-        },
-
-        {
+          },
+          {
             title:"",
-            width:50,
+            width:52,
             hozAlign:"center",
             headerSort:false,
-            formatter:() => "<button class='iconBtn'>✏</button>",
-            cellClick:function(e,cell){
-                const row = cell.getRow().getData();
-                window.location="modificationarticle.html?id="+row.id;
+            formatter:() => "<button class='iconBtn' title='Modifier'>✏</button>",
+            cellClick:(e,cell)=>{
+              const row = cell.getRow().getData();
+              const id = row?.id;
+              if (id === undefined || id === null || id === "") {
+                alert("ID manquant sur cette ligne.");
+                return;
+              }
+              window.location.href = "modificationarticle.html?id=" + encodeURIComponent(id);
             },
             responsive:0
-        },
+          },
 
-        {title:"Article", field:"article", responsive:1},
-        {title:"Taille", field:"taille", responsive:2},
-        {title:"Couleur", field:"couleur", responsive:3},
-        {title:"Modèle", field:"modele", responsive:4},
+          {title:"Article", field:"article", responsive:1},
+          {title:"Taille", field:"taille", responsive:2},
+          {title:"Couleur", field:"couleur", responsive:3},
+          {title:"Modèle", field:"modele", responsive:4},
 
-        {title:"Numéro", field:"numero", responsive:6},
-        {title:"Date HA", field:"date_ha", responsive:7},
-        {title:"Date mise en ligne", field:"date_mise_en_ligne", responsive:8},
-        {title:"Date vente", field:"date_vente", responsive:9},
-        {title:"Prix HA", field:"prix_ha", responsive:10},
-        {title:"CA encaissé", field:"ca_encaisse", responsive:11}
-    ],
-});
+          // Le reste en priorité faible (mobile => collapse)
+          {title:"Numéro", field:"numero", responsive:8},
+          {title:"Date HA", field:"date_ha", responsive:9},
+          {title:"Date mise en ligne", field:"date_mise_en_ligne", responsive:10},
+          {title:"Date vente", field:"date_vente", responsive:11},
+          {title:"Prix HA", field:"prix_ha", responsive:12},
+          {title:"CA encaissé", field:"ca_encaisse", responsive:13},
+          {title:"Qui", field:"qui", responsive:14},
+          {title:"Client", field:"client_id", responsive:15},
+        ],
+      });
+    }
 
-async function loadData(){
-  const {data,error}=await sb
-    .from("ListeProduit")
-    .select("*")
-    .order("id",{ascending:false});
+    async function loadData(table){
+      clearError();
 
-  if(error){
-    alert(error.message);
-    return;
-  }
+      const {data, error} = await sb
+        .from("ListeProduit")
+        .select("id, numero, article, taille, modele, couleur, date_ha, date_mise_en_ligne, date_vente, prix_ha, ca_encaisse, qui, client_id")
+        .order("id", {ascending:false})
+        .limit(2000);
 
-  table.setData(data);
-}
+      if (error) throw error;
 
-loadData();
+      table.setData(data || []);
+      el("countChip").textContent = String((data || []).length);
+    }
 
-</script>
+    // Buttons
+    el("btnHome").addEventListener("click", ()=>window.location.href="index.html");
+    el("btnAdd").addEventListener("click", ()=>window.location.href="admin.html");
+    el("btnReload").addEventListener("click", async ()=>{
+      try{
+        clearError();
+        await loadData(window.__table);
+      }catch(err){
+        console.error(err);
+        showError("Erreur rechargement : " + (err?.message || err));
+      }
+    });
+    el("btnLogout").addEventListener("click", async ()=>{
+      await sb.auth.signOut();
+      window.location.href="index.html";
+    });
 
+    (async function main(){
+      try{
+        console.log("articles.html: start");
+        await requireSession();
+        window.__table = buildTable();
+        await loadData(window.__table);
+        console.log("articles.html: ok");
+      }catch(err){
+        console.error(err);
+        showError("Erreur chargement : " + (err?.message || err));
+      }
+    })();
+  </script>
 </body>
 </html>
