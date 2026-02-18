@@ -1,138 +1,66 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Fiche Produit - Projet Léandre</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f5f5f5;
-    }
-
-    .container {
-      max-width: 1100px;
-      margin: auto;
-      padding: 20px;
-    }
+    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f5f5f5; }
+    .container { max-width:1100px; margin:auto; padding:20px; }
 
     .topbar {
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      padding: 10px 0;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 24px;
+      display:flex; justify-content:space-between; align-items:center;
+      padding:10px 0;
     }
 
     .btn {
-      padding: 10px 14px;
-      cursor: pointer;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      background: #f7f7f7;
-      font-size: 14px;
+      padding:10px 14px;
+      cursor:pointer;
+      border-radius:10px;
+      border:1px solid #ccc;
+      background:#f7f7f7;
     }
+    .btn.primary { background:#111; color:#fff; }
 
-    .btn.primary {
-      background:#111;
-      color:#fff;
-      border-color:#111;
-    }
-
-    /* PHOTO PRINCIPALE */
     .photo-main {
-      width: 100%;
-      height: auto;
-      max-height: 420px;
-      object-fit: cover;
-      border-radius: 12px;
-      background: #eee;
-    }
-
-    /* MINIATURES */
-    .thumbs {
-      display:flex;
-      gap:10px;
-      margin-top:12px;
-      flex-wrap:wrap;
-    }
-
-    .thumb {
-      width: 80px;
-      height: 80px;
-      border-radius: 8px;
-      object-fit: cover;
-      cursor: pointer;
-      border: 2px solid transparent;
-      transition: border-color .2s;
-    }
-
-    .thumb.active {
-      border-color:#111;
-    }
-
-    /* BLOCS */
-    .box {
-      background:white;
+      width:100%;
+      max-height:420px;
+      object-fit:cover;
+      background:#eee;
       border-radius:12px;
-      padding:20px;
-      margin-top:20px;
+    }
+
+    .thumbs { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
+    .thumb {
+      width:80px; height:80px; border-radius:8px; object-fit:cover;
+      cursor:pointer; border:2px solid transparent;
+    }
+    .thumb.active { border-color:#111; }
+
+    .box {
+      background:white; padding:20px; margin-top:20px; border-radius:12px;
       box-shadow:0 2px 6px rgba(0,0,0,0.08);
     }
-
     .box h2 {
-      margin-top:0;
-      font-size: 20px;
-      border-bottom:1px solid #eee;
-      padding-bottom:6px;
+      margin:0 0 10px 0; padding-bottom:6px; border-bottom:1px solid #eee;
     }
 
-    /* GRID TEXTE */
-    .grid2 {
-      display:grid;
-      grid-template-columns: 160px 1fr;
-      gap: 8px 18px;
-      margin-bottom: 10px;
-    }
+    .grid2 { display:grid; grid-template-columns:160px 1fr; gap:8px 18px; }
+    .label { font-weight:600; color:#555; }
 
-    .label {
-      font-weight: 600;
-      color:#555;
-    }
-
-    .value {
-      color:#111;
-    }
-
-    /* GALERIE */
     .photos-grid {
-      display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap:12px;
+      display:grid; gap:12px;
+      grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
     }
-
     .photos-grid img {
-      width:100%;
-      height:140px;
-      object-fit:cover;
-      border-radius:10px;
-      background:#eee;
+      width:100%; height:140px; object-fit:cover;
+      border-radius:10px; background:#eee;
     }
 
     /* MOBILE */
-    @media (max-width: 700px) {
-      h1 { font-size:20px; }
-      .grid2 {
-        grid-template-columns: 1fr;
-        gap: 4px 0;
-      }
+    @media (max-width:700px) {
+      .grid2 { grid-template-columns:1fr; }
       .label { margin-top:10px; }
     }
   </style>
@@ -146,68 +74,61 @@
     <button id="btnEdit" class="btn primary">Modifier</button>
   </div>
 
-  <div id="subtitle" style="margin-bottom:20px; color:#666;"></div>
+  <div id="subtitle" style="color:#666; margin-bottom:20px;"></div>
 
-  <!-- PHOTO PRINCIPALE -->
   <div class="box">
-    <img id="photoMain" class="photo-main" src="" alt="Photo principale" />
+    <img id="photoMain" class="photo-main" src="">
     <div id="thumbs" class="thumbs"></div>
   </div>
 
-  <!-- IDENTIFICATION -->
   <div class="box">
     <h2>Identification</h2>
     <div class="grid2">
-      <div class="label">Numéro</div><div class="value" id="v_numero"></div>
-      <div class="label">Article</div><div class="value" id="v_article"></div>
-      <div class="label">Taille</div><div class="value" id="v_taille"></div>
-      <div class="label">Modèle</div><div class="value" id="v_modele"></div>
-      <div class="label">Couleur</div><div class="value" id="v_couleur"></div>
+      <div class="label">Numéro</div><div id="v_numero"></div>
+      <div class="label">Article</div><div id="v_article"></div>
+      <div class="label">Taille</div><div id="v_taille"></div>
+      <div class="label">Modèle</div><div id="v_modele"></div>
+      <div class="label">Couleur</div><div id="v_couleur"></div>
     </div>
   </div>
 
-  <!-- PROCESS -->
   <div class="box">
     <h2>Process & Suivi</h2>
     <div class="grid2">
-      <div class="label">Date achat</div><div id="v_date_ha" class="value"></div>
-      <div class="label">Mise en ligne</div><div id="v_date_ml" class="value"></div>
-      <div class="label">Date vente</div><div id="v_date_vente" class="value"></div>
-      <div class="label">Qui</div><div id="v_qui" class="value"></div>
+      <div class="label">Date achat</div><div id="v_date_ha"></div>
+      <div class="label">Mise en ligne</div><div id="v_date_ml"></div>
+      <div class="label">Date vente</div><div id="v_date_vente"></div>
+      <div class="label">Qui</div><div id="v_qui"></div>
     </div>
   </div>
 
-  <!-- FINANCE -->
   <div class="box">
     <h2>Finance</h2>
     <div class="grid2">
-      <div class="label">Prix HA</div><div id="v_prixha" class="value"></div>
-      <div class="label">CA encaissé</div><div id="v_ca" class="value"></div>
-      <div class="label">Marge dégagée</div><div id="v_marge" class="value"></div>
-      <div class="label">Coefficient réalisé</div><div id="v_coef" class="value"></div>
+      <div class="label">Prix HA</div><div id="v_prixha"></div>
+      <div class="label">CA encaissé</div><div id="v_ca"></div>
+      <div class="label">Marge dégagée</div><div id="v_marge"></div>
+      <div class="label">Coef réalisé</div><div id="v_coef"></div>
     </div>
   </div>
 
-  <!-- DELAIS -->
   <div class="box">
     <h2>Délais</h2>
     <div class="grid2">
-      <div class="label">Délai mise en ligne</div><div id="v_delai_ml" class="value"></div>
-      <div class="label">Délai vente</div><div id="v_delai_vente" class="value"></div>
-      <div class="label">Achat → Revente</div><div id="v_delai_ar" class="value"></div>
+      <div class="label">Délai mise en ligne</div><div id="v_delai_ml"></div>
+      <div class="label">Délai vente</div><div id="v_delai_vente"></div>
+      <div class="label">Achat → Revente</div><div id="v_delai_ar"></div>
     </div>
   </div>
 
-  <!-- VENTE -->
   <div class="box">
     <h2>Vente</h2>
     <div class="grid2">
-      <div class="label">Client</div><div id="v_client" class="value"></div>
-      <div class="label">Date réception</div><div id="v_recep" class="value"></div>
+      <div class="label">Client</div><div id="v_client"></div>
+      <div class="label">Date réception</div><div id="v_recep"></div>
     </div>
   </div>
 
-  <!-- GALERIE -->
   <div class="box">
     <h2>Toutes les photos</h2>
     <div id="gallery" class="photos-grid"></div>
@@ -215,157 +136,160 @@
 
 </div>
 
-
 <script>
-  const supabaseUrl = "https://ghgmifhqgqiqignowred.supabase.co";
-  const supabaseKey = "sb-publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
-  const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-  const BUCKET = "Article-photos";
+/* ---------------------------------------------------------------- */
+/*  CONFIG SUPABASE (identique à modificationarticle)              */
+/* ---------------------------------------------------------------- */
+const supabaseUrl = "https://ghgmifhqgqiqignowred.supabase.co";
+const supabaseKey = "sb-publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-  const qs = new URLSearchParams(location.search);
-  const recordId = qs.get("id");
-  const el = id => document.getElementById(id);
+const BUCKET = "Article-photos";
+const qs = new URLSearchParams(location.search);
+const recordId = qs.get("id");
+const $ = id => document.getElementById(id);
 
-  /* 🔐 AUTH : Correction 401 avec restauration session */
-  async function ensureAuthOrRedirect() {
-    // Premier essai (souvent null)
-    let { data: { session } } = await supabaseClient.auth.getSession();
+/* ---------------------------------------------------------------- */
+/*  AUTHENTIFICATION — COPIÉE EXACTEMENT DU FICHIER QUI MARCHE     */
+/* ---------------------------------------------------------------- */
 
-    if (!session) {
-      // ⏳ Attente pour laisser Supabase restaurer la session locale
-      await new Promise(r => setTimeout(r, 150));
+async function checkAuth() {
+  const { data } = await supabaseClient.auth.getSession();
+  if (!data.session) {
+    window.location.href = "index.html";
+    return null;
+  }
+  return data.session;
+}
 
-      let restored = await supabaseClient.auth.getSession();
-      if (!restored.data.session) {
-        location.href = "index.html";
-        return null;
-      }
-      return restored.data.session;
-    }
+/* ---------------------------------------------------------------- */
+/*  FONCTIONS UTILITAIRES                                           */
+/* ---------------------------------------------------------------- */
+function fmt(v){ return v || ""; }
 
-    return session;
+function days(a,b){
+  if(!a||!b) return "";
+  return Math.round((new Date(b)-new Date(a))/86400000) + " j";
+}
+
+/* ---------------------------------------------------------------- */
+/*  CHARGER ARTICLE                                                 */
+/* ---------------------------------------------------------------- */
+async function loadArticle(){
+  const { data, error } = await supabaseClient
+    .from("ListeProduit")
+    .select("*")
+    .eq("id", recordId)
+    .single();
+
+  if(error){ alert(error.message); return; }
+
+  $("subtitle").textContent = "Article : " + data.article;
+
+  $("v_numero").textContent = data.numero;
+  $("v_article").textContent = data.article;
+  $("v_taille").textContent = data.taille;
+  $("v_modele").textContent = data.modele;
+  $("v_couleur").textContent = data.couleur;
+
+  $("v_date_ha").textContent = fmt(data.date_ha);
+  $("v_date_ml").textContent = fmt(data.date_mise_en_ligne);
+  $("v_date_vente").textContent = fmt(data.date_vente);
+  $("v_qui").textContent = fmt(data.qui);
+
+  const prix = parseFloat(data.prix_ha)||0;
+  const ca = parseFloat(data.ca_encaisse)||0;
+
+  $("v_prixha").textContent = prix;
+  $("v_ca").textContent = ca;
+  $("v_marge").textContent = (ca - prix).toFixed(2) + " €";
+  $("v_coef").textContent = prix>0 ? (ca/prix).toFixed(2) : "";
+
+  $("v_delai_ml").textContent = days(data.date_ha, data.date_mise_en_ligne);
+  $("v_delai_vente").textContent = days(data.date_mise_en_ligne, data.date_vente);
+  $("v_delai_ar").textContent = days(data.date_ha, data.date_vente);
+
+  $("v_client").textContent = fmt(data.client_id);
+  $("v_recep").textContent = fmt(data.date_recep);
+
+  await loadPhotos();
+}
+
+/* ---------------------------------------------------------------- */
+/*  CHARGER PHOTOS                                                  */
+/* ---------------------------------------------------------------- */
+async function loadPhotos(){
+  const { data } = await supabaseClient
+    .from("article_photos")
+    .select("*")
+    .eq("article_id", recordId)
+    .order("is_main", { ascending:false });
+
+  const thumbs = $("thumbs");
+  const gallery = $("gallery");
+  const mainPhoto = $("photoMain");
+
+  thumbs.innerHTML = "";
+  gallery.innerHTML = "";
+
+  if(!data || !data.length){
+    mainPhoto.src = "";
+    return;
   }
 
-  /* Format date brute */
-  function fmt(d) { return d || ""; }
+  const main = data.find(p=>p.is_main) || data[0];
 
-  /* Différence en jours */
-  function days(a, b) {
-    if (!a || !b) return "";
-    return `${Math.round((new Date(b) - new Date(a)) / 86400000)} j`;
-  }
+  const { data:signedMain } = await supabaseClient
+    .storage.from(BUCKET)
+    .createSignedUrl(main.path, 3600);
 
-  /* 🔥 CHARGER ARTICLE */
-  async function loadArticle() {
-    const { data, error } = await supabaseClient
-      .from("ListeProduit")
-      .select("*")
-      .eq("id", recordId)
-      .single();
+  mainPhoto.src = signedMain.signedUrl;
 
-    if (error) { alert(error.message); return; }
-
-    el("subtitle").textContent = "Article : " + (data.article ?? "");
-
-    el("v_numero").textContent = data.numero ?? "";
-    el("v_article").textContent = data.article ?? "";
-    el("v_taille").textContent = data.taille ?? "";
-    el("v_modele").textContent = data.modele ?? "";
-    el("v_couleur").textContent = data.couleur ?? "";
-
-    el("v_date_ha").textContent = fmt(data.date_ha);
-    el("v_date_ml").textContent = fmt(data.date_mise_en_ligne);
-    el("v_date_vente").textContent = fmt(data.date_vente);
-    el("v_qui").textContent = fmt(data.qui);
-
-    const prix = parseFloat(data.prix_ha) || 0;
-    const ca = parseFloat(data.ca_encaisse) || 0;
-
-    el("v_prixha").textContent = prix;
-    el("v_ca").textContent = ca;
-    el("v_marge").textContent = (ca - prix).toFixed(2) + " €";
-    el("v_coef").textContent = prix > 0 ? (ca / prix).toFixed(2) : "";
-
-    el("v_delai_ml").textContent = days(data.date_ha, data.date_mise_en_ligne);
-    el("v_delai_vente").textContent = days(data.date_mise_en_ligne, data.date_vente);
-    el("v_delai_ar").textContent = days(data.date_ha, data.date_vente);
-
-    el("v_client").textContent = data.client_id ?? "";
-    el("v_recep").textContent = fmt(data.date_recep);
-
-    await loadPhotos();
-  }
-
-  /* 📷 PHOTOS */
-  async function loadPhotos() {
-    const { data, error } = await supabaseClient
-      .from("article_photos")
-      .select("*")
-      .eq("article_id", recordId)
-      .order("is_main", { ascending: false });
-
-    const thumbs = el("thumbs");
-    const gallery = el("gallery");
-    const photoMain = el("photoMain");
-
-    thumbs.innerHTML = "";
-    gallery.innerHTML = "";
-
-    if (!data || !data.length) {
-      photoMain.src = "";
-      return;
-    }
-
-    const main = data.find(p => p.is_main) || data[0];
-
-    const { data: signedMain } = await supabaseClient
+  for(const p of data){
+    const { data:signed } = await supabaseClient
       .storage.from(BUCKET)
-      .createSignedUrl(main.path, 3600);
+      .createSignedUrl(p.path, 3600);
 
-    photoMain.src = signedMain.signedUrl;
+    const img = document.createElement("img");
+    img.src = signed.signedUrl;
+    img.className = "thumb" + (p.id===main.id?" active":"");
 
-    for (const p of data) {
-      const { data: signed } = await supabaseClient
-        .storage.from(BUCKET)
-        .createSignedUrl(p.path, 3600);
+    img.onclick = ()=>{
+      mainPhoto.src = signed.signedUrl;
+      document.querySelectorAll(".thumb").forEach(t=>t.classList.remove("active"));
+      img.classList.add("active");
+    };
 
-      const img = document.createElement("img");
-      img.src = signed.signedUrl;
-      img.className = "thumb" + (p.id === main.id ? " active" : "");
-
-      img.onclick = () => {
-        photoMain.src = signed.signedUrl;
-        document.querySelectorAll(".thumb").forEach(t => t.classList.remove("active"));
-        img.classList.add("active");
-      };
-
-      thumbs.appendChild(img);
-    }
-
-    for (const p of data) {
-      const { data: signed } = await supabaseClient
-        .storage.from(BUCKET)
-        .createSignedUrl(p.path, 3600);
-
-      const g = document.createElement("img");
-      g.src = signed.signedUrl;
-
-      gallery.appendChild(g);
-    }
+    thumbs.appendChild(img);
   }
 
-  /* Bouton Modifier */
-  el("btnEdit").onclick = () => {
-    location.href = "modificationarticle.html?id=" + recordId;
-  };
+  for(const p of data){
+    const { data:signed } = await supabaseClient
+      .storage.from(BUCKET)
+      .createSignedUrl(p.path, 3600);
 
-  /* 🚀 Boot sécurisé */
-  (async () => {
-    const session = await ensureAuthOrRedirect();
-    if (!session) return;
+    const g = document.createElement("img");
+    g.src = signed.signedUrl;
+    gallery.appendChild(g);
+  }
+}
 
-    await loadArticle();
-  })();
+/* ---------------------------------------------------------------- */
+/*  BOUTON MODIFIER                                                 */
+/* ---------------------------------------------------------------- */
+$("btnEdit").onclick = ()=>{
+  location.href = "modificationarticle.html?id=" + recordId;
+};
+
+/* ---------------------------------------------------------------- */
+/*  LANCEMENT — IDENTIQUE À modificationarticle.html                */
+/* ---------------------------------------------------------------- */
+(async()=>{
+  const session = await checkAuth();
+  if(!session) return; // Sécurité
+
+  await loadArticle();
+})();
 </script>
 
 </body>
