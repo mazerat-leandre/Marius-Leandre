@@ -114,25 +114,17 @@ const recordId = qs.get("id");
 const $ = id => document.getElementById(id);
 
 /* -------------------------------------------------------------------------- */
-/* AUTH : SYSTÈME IDENTIQUE À modificationarticle.html */
+/* FONCTION MAGIQUE QUI RÈGLE LE 401 : attendre la session */
 /* -------------------------------------------------------------------------- */
 
-async function ensureAuth() {
-  // 1) Lire la session existante
-  let { data: { session } } = await supabaseClient.auth.getSession();
-
-  // 2) Si null → attendre restauration Supabase
-  if (!session) {
-    await new Promise(r => setTimeout(r, 200));
-    let restored = await supabaseClient.auth.getSession();
-    if (!restored.data.session) {
-      window.location.href = "index.html";
-      return null;
+async function waitForSession() {
+    let session = null;
+    while (!session) {
+        const res = await supabaseClient.auth.getSession();
+        session = res.data.session;
+        if (!session) await new Promise(r=>setTimeout(r,50));
     }
-    return restored.data.session;
-  }
-
-  return session;
+    return session;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -252,13 +244,13 @@ $("btnEdit").onclick = ()=>{
 };
 
 /* -------------------------------------------------------------------------- */
-/* LANCEMENT GLOBAL */
+/* LANCEMENT GLOBAL AVEC SÉCURISATION SESSION */
 /* -------------------------------------------------------------------------- */
 
 (async()=>{
-  const session = await ensureAuth();
-  if(!session) return;
-
+  console.log("⏳ Attente session Supabase…");
+  await waitForSession();
+  console.log("✅ Session restaurée, chargement article…");
   await loadArticle();
 })();
 </script>
