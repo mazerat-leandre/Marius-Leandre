@@ -1,126 +1,235 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Projet Léandre - Accueil</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 40px; max-width: 1000px; }
-    .topbar { display:flex; justify-content:space-between; align-items:center; gap:12px; }
-    .box { border: 1px solid #ddd; border-radius: 10px; padding: 18px; margin-top: 16px; }
-    .row { margin: 10px 0; }
-    label { display:block; font-weight:600; margin-bottom:6px; }
-    input { width: 100%; padding: 10px; box-sizing: border-box; }
-    button { padding: 12px 14px; cursor: pointer; border-radius: 10px; border: 1px solid #ccc; background: #f7f7f7; }
-    button.primary { background:#111; color:#fff; border-color:#111; }
-    button:disabled { opacity: .5; cursor:not-allowed; }
-    .error { color: #b00020; }
-    .muted { color:#666; font-size: 0.95em; }
-    .grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-    .cardbtn { text-align:left; padding:16px; }
-    .cardtitle { font-weight:700; margin-bottom:6px; }
-    .cardsub { color:#666; font-size:0.95em; }
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Accueil</title>
+
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#0b1220;
+  --panel:rgba(255,255,255,.06);
+  --border:rgba(255,255,255,.12);
+  --text:rgba(255,255,255,.92);
+  --muted:rgba(255,255,255,.65);
+  --accent:#7c5cff;
+  --danger:#ff4d6d;
+  --shadow:0 18px 60px rgba(0,0,0,.45);
+  --radius:20px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,sans-serif;
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(124,92,255,.35), transparent 55%),
+    radial-gradient(900px 500px at 95% 0%, rgba(33,212,253,.22), transparent 55%),
+    var(--bg);
+}
+
+.container{
+  width:100%;
+  max-width:420px;
+  padding:20px;
+}
+
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:30px 25px;
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(12px);
+}
+
+h1{
+  margin:0 0 10px 0;
+  font-size:22px;
+  font-weight:800;
+  text-align:center;
+}
+
+.subtitle{
+  text-align:center;
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:25px;
+}
+
+.field{
+  display:flex;
+  flex-direction:column;
+  margin-bottom:15px;
+}
+
+label{
+  font-size:11px;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:6px;
+  font-weight:700;
+}
+
+input{
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.08);
+  color:white;
+  font-weight:600;
+}
+
+input:focus{
+  outline:none;
+  border-color:var(--accent);
+}
+
+.btn{
+  width:100%;
+  padding:12px;
+  border-radius:14px;
+  border:none;
+  background:var(--accent);
+  color:white;
+  font-weight:700;
+  cursor:pointer;
+  margin-top:10px;
+}
+
+.btn.secondary{
+  background:rgba(255,255,255,.08);
+  border:1px solid var(--border);
+}
+
+.menuBtn{
+  display:block;
+  width:100%;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.08);
+  color:white;
+  font-weight:700;
+  margin-bottom:12px;
+  text-align:center;
+  cursor:pointer;
+}
+
+.userBadge{
+  text-align:center;
+  margin-bottom:20px;
+  font-size:13px;
+  font-weight:700;
+  color:var(--muted);
+}
+
+</style>
 </head>
+
 <body>
 
-  <div class="topbar">
-    <h1>Projet Léandre</h1>
-    <button id="btnLogout" style="display:none;">Se déconnecter</button>
+<div class="container">
+
+<div class="card" id="loginCard">
+  <h1>Connexion</h1>
+  <div class="subtitle">Accès à la gestion des articles</div>
+
+  <div class="field">
+    <label>Email</label>
+    <input type="email" id="email">
   </div>
 
-  <!-- LOGIN -->
-  <div id="loginBox" class="box" style="display:none;">
-    <h2>Connexion</h2>
-    <div class="row">
-      <label>Email</label>
-      <input id="email" type="email" autocomplete="username" />
-    </div>
-    <div class="row">
-      <label>Mot de passe</label>
-      <input id="password" type="password" autocomplete="current-password" />
-    </div>
-    <button id="btnLogin" class="primary">Se connecter</button>
-    <p id="loginMsg" class="error"></p>
-    <p class="muted">Accès réservé.</p>
+  <div class="field">
+    <label>Mot de passe</label>
+    <input type="password" id="password">
   </div>
 
-  <!-- ACCUEIL -->
-  <div id="homeBox" class="box" style="display:none;">
-    <h2>Accueil</h2>
-    <p class="muted">Choisis une action :</p>
+  <button class="btn" id="loginBtn">Se connecter</button>
+</div>
 
-    <div class="grid">
-      <button id="goArticles" class="cardbtn primary">
-        <div class="cardtitle">Liste des articles</div>
-        <div class="cardsub">Voir et filtrer les produits</div>
-      </button>
+<div class="card" id="menuCard" style="display:none">
+  <h1>Tableau de bord</h1>
+  <div class="userBadge" id="userInfo"></div>
 
-      <button class="cardbtn" disabled>
-        <div class="cardtitle">Statistiques</div>
-        <div class="cardsub">À venir</div>
-      </button>
-
-      <button class="cardbtn" disabled>
-        <div class="cardtitle">Ajouter / Modifier</div>
-        <div class="cardsub">À venir</div>
-      </button>
-
-      <button class="cardbtn" disabled>
-        <div class="cardtitle">Photos</div>
-        <div class="cardsub">À venir</div>
-      </button>
-    </div>
+  <div class="menuBtn" onclick="window.location='articles.html'">
+    📦 Liste des articles
   </div>
 
-  <script>
-    const supabaseUrl = "https://ghgmifhqgqiqignowred.supabase.co";
-    const supabaseKey = "sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
-    const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+  <div class="menuBtn" onclick="window.location='admin.html'">
+    ➕ Ajouter un article
+  </div>
 
-    const el = (id) => document.getElementById(id);
+  <button class="btn secondary" id="logoutBtn">
+    Déconnexion
+  </button>
+</div>
 
-    function showLogin() {
-      el("btnLogout").style.display = "none";
-      el("loginMsg").textContent = "";
-      el("loginBox").style.display = "";
-      el("homeBox").style.display = "none";
-    }
+</div>
 
-    function showHome() {
-      el("btnLogout").style.display = "";
-      el("loginBox").style.display = "none";
-      el("homeBox").style.display = "";
-    }
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
 
-    el("btnLogin").addEventListener("click", async () => {
-      el("loginMsg").textContent = "";
-      const email = el("email").value.trim();
-      const password = el("password").value;
+const supabaseUrl="https://ghgmifhqgqiqignowred.supabase.co";
+const supabaseKey="sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
+const sb=window.supabase.createClient(supabaseUrl,supabaseKey);
 
-      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      if (error) {
-        el("loginMsg").textContent = error.message;
-        return;
-      }
-      showHome();
-    });
+const loginCard=document.getElementById("loginCard");
+const menuCard=document.getElementById("menuCard");
+const userInfo=document.getElementById("userInfo");
 
-    el("btnLogout").addEventListener("click", async () => {
-      await supabaseClient.auth.signOut();
-      showLogin();
-    });
+async function checkSession(){
+  const {data}=await sb.auth.getSession();
+  if(data.session){
+    showMenu(data.session.user.email);
+  }else{
+    showLogin();
+  }
+}
 
-    el("goArticles").addEventListener("click", () => {
-      location.href = "articles.html";
-    });
+function showLogin(){
+  loginCard.style.display="block";
+  menuCard.style.display="none";
+}
 
-    // Au chargement : si session -> accueil, sinon login
-    (async () => {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session) showLogin();
-      else showHome();
-    })();
-  </script>
+function showMenu(email){
+  loginCard.style.display="none";
+  menuCard.style.display="block";
+  userInfo.textContent="Connecté : "+email;
+}
+
+document.getElementById("loginBtn").addEventListener("click", async()=>{
+  const email=document.getElementById("email").value;
+  const password=document.getElementById("password").value;
+
+  const {error}=await sb.auth.signInWithPassword({email,password});
+  if(error){
+    alert(error.message);
+  }else{
+    checkSession();
+  }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", async()=>{
+  await sb.auth.signOut();
+  showLogin();
+});
+
+checkSession();
+
+</script>
+
 </body>
 </html>
