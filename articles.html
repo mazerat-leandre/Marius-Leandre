@@ -178,20 +178,35 @@
         pagination: "local",
         paginationSize: 25,
 
-        columns: [
-          // 1) Colonne crayon
-          {
-            title: "",
-            field: "_edit",
-            width: 60,
-            hozAlign: "center",
-            headerSort: false,
-            formatter: () => `<span class="edit-btn" title="Modifier">✏️</span>`,
-            cellClick: (e, cell) => {
-              const row = cell.getRow().getData();
-              location.href = `modificationarticle.html?id=${encodeURIComponent(row.id)}`;
-            }
-          },
+       columns: [
+  // Bouton Vue (œil)
+  {
+    title: "",
+    field: "_view",
+    width: 60,
+    hozAlign: "center",
+    headerSort: false,
+    formatter: () => `<span class="edit-btn" title="Voir fiche">👁️</span>`,
+    cellClick: (e, cell) => {
+      const row = cell.getRow().getData();
+      location.href = `fichearticle.html?id=${encodeURIComponent(row.id)}`;
+    }
+  },
+
+  // Bouton Modifier (crayon)
+  {
+    title: "",
+    field: "_edit",
+    width: 60,
+    hozAlign: "center",
+    headerSort: false,
+    formatter: () => `<span class="edit-btn" title="Modifier">✏️</span>`,
+    cellClick: (e, cell) => {
+      const row = cell.getRow().getData();
+      location.href = `modificationarticle.html?id=${encodeURIComponent(row.id)}`;
+    }
+  },
+
 
           // 2) Ordre des colonnes demandé
           { title: "Num", field: "numero", width: 95, headerFilter: "input" },
