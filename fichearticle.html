@@ -201,17 +201,29 @@
 
 <script>
   const supabaseUrl = "https://ghgmifhqgqiqignowred.supabase.co";
-  const supabaseKey = "sb-publishable-8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
+  const supabaseKey = "sb-publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
   const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-  const BUCKET = "Articles-photos";
+  const BUCKET = "Article-photos";
 
   const qs = new URLSearchParams(location.search);
   const recordId = qs.get("id");
 
   const el = id => document.getElementById(id);
 
+  /* AUTHENTIFICATION (corrige le 401) */
+  async function ensureAuthOrRedirect() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+      location.href = "index.html";
+      return null;
+    }
+    return session;
+  }
+
+  /* Format simple */
   function fmt(d) { return d || ""; }
 
+  /* Différence en jours */
   function days(a, b) {
     if (!a || !b) return "";
     return `${Math.round((new Date(b) - new Date(a)) / 86400000)} j`;
@@ -314,11 +326,19 @@
     }
   }
 
+  /* Bouton modifier */
   el("btnEdit").onclick = () => {
     location.href = "modificationarticle.html?id=" + recordId;
   };
 
-  loadArticle();
+  /* Boot */
+  (async () => {
+    const session = await ensureAuthOrRedirect();
+    if (!session) return;
+
+    await loadArticle();
+  })();
+
 </script>
 
 </body>
