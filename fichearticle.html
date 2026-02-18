@@ -1,260 +1,721 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Fiche Article</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fiche article</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
-    body { font-family: Arial; margin:0; padding:0; background:#f5f5f5; }
-    .container { max-width:1100px; margin:auto; padding:20px; }
-
-    .topbar { display:flex; justify-content:space-between; align-items:center; }
-    h1 { margin:0; }
-
-    .btn { padding:10px 14px; border-radius:10px; background:#111; color:white; cursor:pointer; }
-
-    .box {
-      background:white; padding:20px; margin-top:20px;
-      border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.1);
+    :root{
+      --bg: #0b1220;
+      --panel: rgba(255,255,255,.06);
+      --panel2: rgba(255,255,255,.085);
+      --border: rgba(255,255,255,.10);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.70);
+      --muted2: rgba(255,255,255,.55);
+      --accent: #7c5cff;
+      --accent2: #21d4fd;
+      --danger: #ff4d6d;
+      --ok: #2dd4bf;
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --radius: 18px;
     }
 
-    .photo-main { width:100%; max-height:420px; object-fit:cover; border-radius:12px; }
+    *{ box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(124,92,255,.35), transparent 55%),
+        radial-gradient(900px 500px at 95% 0%, rgba(33,212,253,.22), transparent 55%),
+        radial-gradient(800px 500px at 60% 120%, rgba(45,212,191,.18), transparent 55%),
+        var(--bg);
+      min-height: 100vh;
+    }
 
-    .thumbs { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
-    .thumb { width:80px; height:80px; border-radius:8px; object-fit:cover; cursor:pointer; border:2px solid transparent; }
-    .thumb.active { border-color:#111; }
+    a{ color: inherit; text-decoration: none; }
 
-    .grid2 { display:grid; grid-template-columns:160px 1fr; gap:8px 18px; }
-    .label { font-weight:600; }
+    .wrap{
+      max-width: 1150px;
+      margin: 0 auto;
+      padding: 28px 18px 60px;
+    }
 
-    .photos-grid {
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap: 6px;
+    }
+    .title h1{
+      margin:0;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+    .subtitle{
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .actions{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+    }
+
+    .btn{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: transform .08s ease, background .15s ease, border-color .15s ease;
+      backdrop-filter: blur(10px);
+    }
+    .btn:hover{
+      background: rgba(255,255,255,.10);
+      border-color: rgba(255,255,255,.16);
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{
+      border-color: rgba(124,92,255,.45);
+      background: linear-gradient(135deg, rgba(124,92,255,.25), rgba(33,212,253,.12));
+    }
+    .btn.danger{
+      border-color: rgba(255,77,109,.45);
+      background: rgba(255,77,109,.10);
+      color: rgba(255,255,255,.92);
+    }
+
+    .grid{
       display:grid;
-      grid-template-columns:repeat(auto-fit, minmax(120px,1fr));
-      gap:12px;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 16px;
+      align-items:start;
     }
-    .photos-grid img { width:100%; height:140px; object-fit:cover; border-radius:10px; }
+
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .panel{
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      backdrop-filter: blur(12px);
+    }
+
+    .panelHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,.03);
+    }
+    .panelHeader .h{
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: .2px;
+    }
+    .panelHeader .chip{
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+    }
+
+    /* Gallery */
+    .gallery{
+      padding: 14px;
+    }
+    .hero{
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+    }
+    .hero img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display:block;
+    }
+    .hero .placeholder{
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color: var(--muted2);
+      font-weight: 600;
+      font-size: 13px;
+      text-align:center;
+      padding: 10px;
+    }
+    .thumbs{
+      display:flex;
+      gap: 10px;
+      margin-top: 12px;
+      overflow:auto;
+      padding-bottom: 2px;
+    }
+    .thumb{
+      flex: 0 0 auto;
+      width: 72px;
+      height: 56px;
+      border-radius: 12px;
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      cursor:pointer;
+      position:relative;
+      transition: transform .08s ease, border-color .15s ease;
+    }
+    .thumb:hover{ border-color: rgba(255,255,255,.22); }
+    .thumb:active{ transform: translateY(1px); }
+    .thumb img{ width:100%; height:100%; object-fit: cover; display:block; }
+    .thumb.active{
+      border-color: rgba(124,92,255,.65);
+      box-shadow: 0 0 0 3px rgba(124,92,255,.15);
+    }
+
+    /* Cards column */
+    .cards{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .card{
+      padding: 14px 16px 16px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 18px;
+    }
+    .cardTitle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom: 10px;
+      gap: 12px;
+    }
+    .cardTitle span{
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: .25px;
+    }
+    .cardTitle small{
+      color: var(--muted2);
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .kv{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 14px;
+    }
+    @media (max-width: 520px){
+      .kv{ grid-template-columns: 1fr; }
+    }
+    .row{
+      display:flex;
+      flex-direction:column;
+      gap: 4px;
+      padding: 10px 10px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.07);
+    }
+    .k{
+      font-size: 11px;
+      color: var(--muted2);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .v{
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.25;
+      word-break: break-word;
+    }
+    .v.muted{ color: var(--muted); font-weight: 650; }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .footerNote{
+      margin-top: 14px;
+      color: var(--muted2);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .loadingOverlay{
+      position: fixed;
+      inset: 0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(0,0,0,.35);
+      backdrop-filter: blur(6px);
+      z-index: 50;
+      padding: 20px;
+    }
+    .loadingBox{
+      width: min(520px, 92vw);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(12,18,32,.82);
+      box-shadow: var(--shadow);
+      padding: 18px 16px;
+    }
+    .loadingBox .t{
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: .2px;
+    }
+    .loadingBox .s{
+      color: var(--muted);
+      font-size: 13px;
+    }
   </style>
 </head>
 
 <body>
-
-<div class="container">
-
-  <div class="topbar">
-    <h1>Fiche Article</h1>
-    <button id="btnBack" class="btn">Retour articles</button>
-    <button id="btnEdit" class="btn">Modifier</button>
-  </div>
-
-  <div id="subtitle" style="margin-bottom:20px;color:#444;"></div>
-
-  <div class="box">
-    <img id="photoMain" class="photo-main">
-    <div id="thumbs" class="thumbs"></div>
-  </div>
-
-  <div class="box">
-    <h2>Identification</h2>
-    <div class="grid2">
-      <div class="label">Numéro</div><div id="v_numero"></div>
-      <div class="label">Article</div><div id="v_article"></div>
-      <div class="label">Taille</div><div id="v_taille"></div>
-      <div class="label">Modèle</div><div id="v_modele"></div>
-      <div class="label">Couleur</div><div id="v_couleur"></div>
+  <div id="loading" class="loadingOverlay" style="display:none">
+    <div class="loadingBox">
+      <div class="t">Chargement…</div>
+      <div class="s">Récupération des informations article et des photos.</div>
     </div>
   </div>
 
-  <div class="box">
-    <h2>Process</h2>
-    <div class="grid2">
-      <div class="label">Date achat</div><div id="v_date_ha"></div>
-      <div class="label">Mise en ligne</div><div id="v_date_ml"></div>
-      <div class="label">Vente</div><div id="v_date_vente"></div>
-      <div class="label">Qui</div><div id="v_qui"></div>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="title">
+        <h1 id="pageTitle">Fiche article</h1>
+        <div class="subtitle" id="pageSubtitle">—</div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="btnBack">← Retour</button>
+        <button class="btn primary" id="btnEdit">Modifier</button>
+        <button class="btn danger" id="btnLogout">Déconnexion</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Left: gallery -->
+      <div class="panel">
+        <div class="panelHeader">
+          <div class="h">Photos</div>
+          <div class="chip" id="photoCount">0</div>
+        </div>
+        <div class="gallery">
+          <div class="hero" id="hero">
+            <div class="placeholder">Aucune photo disponible</div>
+          </div>
+          <div class="thumbs" id="thumbs" style="display:none"></div>
+
+          <div class="footerNote">
+            Astuce : la photo principale est celle marquée <strong>is_main</strong> (sinon la première par ordre).
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: cards -->
+      <div class="panel">
+        <div class="panelHeader">
+          <div class="h">Informations</div>
+          <div class="chip" id="chipId">ID —</div>
+        </div>
+
+        <div class="gallery" style="padding-top: 12px;">
+          <div class="cards">
+            <!-- Block 1 -->
+            <div class="card">
+              <div class="cardTitle">
+                <span>Identité produit</span>
+                <small>Bloc 1</small>
+              </div>
+              <div class="kv">
+                <div class="row"><div class="k">Numéro</div><div class="v" id="v_numero">—</div></div>
+                <div class="row"><div class="k">Article</div><div class="v" id="v_article">—</div></div>
+                <div class="row"><div class="k">Taille</div><div class="v" id="v_taille">—</div></div>
+                <div class="row"><div class="k">Modèle</div><div class="v" id="v_modele">—</div></div>
+                <div class="row"><div class="k">Couleur</div><div class="v" id="v_couleur">—</div></div>
+              </div>
+            </div>
+
+            <!-- Block 2 -->
+            <div class="card">
+              <div class="cardTitle">
+                <span>Dates & suivi</span>
+                <small>Bloc 2</small>
+              </div>
+              <div class="kv">
+                <div class="row"><div class="k">Date HA</div><div class="v" id="v_date_ha">—</div></div>
+                <div class="row"><div class="k">Date mise en ligne</div><div class="v" id="v_date_mise_en_ligne">—</div></div>
+                <div class="row"><div class="k">Date vente</div><div class="v" id="v_date_vente">—</div></div>
+                <div class="row"><div class="k">Qui</div><div class="v" id="v_qui">—</div></div>
+              </div>
+            </div>
+
+            <!-- Block 3 -->
+            <div class="card">
+              <div class="cardTitle">
+                <span>Financier</span>
+                <small>Bloc 3</small>
+              </div>
+              <div class="kv">
+                <div class="row"><div class="k">Prix HA</div><div class="v" id="v_prix_ha">—</div></div>
+                <div class="row"><div class="k">CA encaissé</div><div class="v" id="v_ca_encaisse">—</div></div>
+                <div class="row"><div class="k">Marge dégagée</div><div class="v" id="v_marge">—</div></div>
+                <div class="row"><div class="k">Coef réalisé</div><div class="v" id="v_coef">—</div></div>
+              </div>
+            </div>
+
+            <!-- Block 4 -->
+            <div class="card">
+              <div class="cardTitle">
+                <span>Délais</span>
+                <small>Bloc 4</small>
+              </div>
+              <div class="kv">
+                <div class="row"><div class="k">Délai mise en ligne</div><div class="v" id="v_delai_mise">—</div></div>
+                <div class="row"><div class="k">Délai vente</div><div class="v" id="v_delai_vente">—</div></div>
+                <div class="row"><div class="k">Délai achat → revente</div><div class="v" id="v_delai_achat_revente">—</div></div>
+              </div>
+            </div>
+
+            <!-- Block 5 -->
+            <div class="card">
+              <div class="cardTitle">
+                <span>Client & réception</span>
+                <small>Bloc 5</small>
+              </div>
+              <div class="kv">
+                <div class="row"><div class="k">Client</div><div class="v" id="v_client">—</div></div>
+                <div class="row"><div class="k">Date réception</div><div class="v" id="v_date_recep">—</div></div>
+              </div>
+            </div>
+
+            <div class="footerNote" id="debugNote" style="display:none"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="box">
-    <h2>Finance</h2>
-    <div class="grid2">
-      <div class="label">Prix HA</div><div id="v_prixha"></div>
-      <div class="label">CA</div><div id="v_ca"></div>
-      <div class="label">Marge</div><div id="v_marge"></div>
-      <div class="label">Coef</div><div id="v_coef"></div>
-    </div>
-  </div>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <div class="box">
-    <h2>Délais</h2>
-    <div class="grid2">
-      <div class="label">Mise en ligne</div><div id="v_delai_ml"></div>
-      <div class="label">Vente</div><div id="v_delai_vente"></div>
-      <div class="label">Achat → Vente</div><div id="v_delai_ar"></div>
-    </div>
-  </div>
+  <script>
+    // ======= CONFIG SUPABASE (reprend ton pattern actuel) =======
+    const supabaseUrl = "https://ghllylbytcwumeafwzlq.supabase.co";
+    const supabaseKey = "sb_publishable_XXbb1CA2aBT3I3k4mMyeC3UAC8VgEqx";
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-  <div class="box">
-    <h2>Toutes les photos</h2>
-    <div id="gallery" class="photos-grid"></div>
-  </div>
+    // ======= Helpers UI =======
+    const el = (id) => document.getElementById(id);
 
-</div>
-
-<script>
-/* -------------------------------------------------------------------------- */
-/* CONFIG SUPABASE */
-/* -------------------------------------------------------------------------- */
-const supabaseUrl = "https://ghgmifhqgqiqignowred.supabase.co";
-const supabaseKey = "sb-publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-
-const BUCKET = "Article-photos";
-const qs = new URLSearchParams(location.search);
-const recordId = qs.get("id");
-const $ = id => document.getElementById(id);
-
-/* -------------------------------------------------------------------------- */
-/* FONCTION MAGIQUE QUI RÈGLE LE 401 : attendre la session */
-/* -------------------------------------------------------------------------- */
-
-async function waitForSession() {
-    let session = null;
-    while (!session) {
-        const res = await supabaseClient.auth.getSession();
-        session = res.data.session;
-        if (!session) await new Promise(r=>setTimeout(r,50));
+    function showLoading(on){
+      el("loading").style.display = on ? "flex" : "none";
     }
-    return session;
-}
 
-/* -------------------------------------------------------------------------- */
-/* OUTILS */
-/* -------------------------------------------------------------------------- */
-function fmt(v){ return v || ""; }
+    function qs(name){
+      return new URLSearchParams(location.search).get(name);
+    }
 
-function days(a,b){
-  if(!a||!b) return "";
-  return Math.round((new Date(b)-new Date(a))/86400000) + " j";
-}
+    function toNumber(v){
+      const n = Number(v);
+      return Number.isFinite(n) ? n : 0;
+    }
 
-/* -------------------------------------------------------------------------- */
-/* CHARGER ARTICLE */
-/* -------------------------------------------------------------------------- */
-async function loadArticle(){
-  const { data, error } = await supabaseClient
-    .from("ListeProduit")
-    .select("*")
-    .eq("id", recordId)
-    .single();
+    function isEmptyDate(v){
+      return v === null || v === undefined || v === "" || v === "0";
+    }
 
-  if(error){ console.error(error); alert(error.message); return; }
+    function parseDateSafe(v){
+      if (isEmptyDate(v)) return null;
+      // Supabase peut renvoyer "YYYY-MM-DD" ou ISO
+      const d = new Date(v);
+      if (Number.isNaN(d.getTime())) return null;
+      return d;
+    }
 
-  $("subtitle").textContent = "Article : " + data.article;
+    function formatDateFR(v){
+      const d = parseDateSafe(v);
+      if (!d) return "—";
+      return new Intl.DateTimeFormat("fr-FR", { day:"2-digit", month:"2-digit", year:"numeric" }).format(d);
+    }
 
-  $("v_numero").textContent = data.numero;
-  $("v_article").textContent = data.article;
-  $("v_taille").textContent = data.taille;
-  $("v_modele").textContent = data.modele;
-  $("v_couleur").textContent = data.couleur;
+    function diffDays(a, b){
+      // Renvoie b - a en jours (entier)
+      if (!a || !b) return null;
+      const ms = b.getTime() - a.getTime();
+      const days = Math.round(ms / (1000 * 60 * 60 * 24));
+      return Number.isFinite(days) ? days : null;
+    }
 
-  $("v_date_ha").textContent = fmt(data.date_ha);
-  $("v_date_ml").textContent = fmt(data.date_mise_en_ligne);
-  $("v_date_vente").textContent = fmt(data.date_vente);
-  $("v_qui").textContent = fmt(data.qui);
+    function fmtEuro(v){
+      const n = toNumber(v);
+      return new Intl.NumberFormat("fr-FR", { style:"currency", currency:"EUR" }).format(n);
+    }
 
-  const prix = parseFloat(data.prix_ha)||0;
-  const ca = parseFloat(data.ca_encaisse)||0;
+    function fmtCoef(v){
+      const n = Number(v);
+      if (!Number.isFinite(n)) return "0,00";
+      return new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+    }
 
-  $("v_prixha").textContent = prix;
-  $("v_ca").textContent = ca;
-  $("v_marge").textContent = (ca-prix).toFixed(2)+" €";
-  $("v_coef").textContent = prix>0 ? (ca/prix).toFixed(2) : "";
+    function fmtDaysOrDash(days){
+      if (days === null || days === undefined) return "—";
+      if (!Number.isFinite(days)) return "—";
+      return `${days} jour${Math.abs(days) > 1 ? "s" : ""}`;
+    }
 
-  $("v_delai_ml").textContent = days(data.date_ha, data.date_mise_en_ligne);
-  $("v_delai_vente").textContent = days(data.date_mise_en_ligne, data.date_vente);
-  $("v_delai_ar").textContent = days(data.date_ha, data.date_vente);
+    // ======= Gallery state =======
+    let photos = [];
+    let activeIndex = 0;
 
-  await loadPhotos();
-}
+    function setHero(url){
+      const hero = el("hero");
+      hero.innerHTML = "";
+      if (!url){
+        const p = document.createElement("div");
+        p.className = "placeholder";
+        p.textContent = "Aucune photo disponible";
+        hero.appendChild(p);
+        return;
+      }
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = "Photo principale";
+      hero.appendChild(img);
+    }
 
-/* -------------------------------------------------------------------------- */
-/* CHARGER PHOTOS */
-/* -------------------------------------------------------------------------- */
-async function loadPhotos(){
-  const { data } = await supabaseClient
-    .from("article_photos")
-    .select("*")
-    .eq("article_id", recordId)
-    .order("is_main",{ascending:false});
+    function renderThumbs(){
+      const thumbs = el("thumbs");
+      if (!photos.length){
+        thumbs.style.display = "none";
+        el("photoCount").textContent = "0";
+        setHero(null);
+        return;
+      }
 
-  const thumbs = $("thumbs");
-  const gallery = $("gallery");
-  const mainPhoto = $("photoMain");
+      el("photoCount").textContent = `${photos.length}`;
+      thumbs.style.display = "flex";
+      thumbs.innerHTML = "";
 
-  thumbs.innerHTML = "";
-  gallery.innerHTML = "";
+      photos.forEach((p, idx) => {
+        const d = document.createElement("div");
+        d.className = "thumb" + (idx === activeIndex ? " active" : "");
+        const img = document.createElement("img");
+        img.src = p.signedUrl;
+        img.alt = "Miniature";
+        d.appendChild(img);
 
-  if(!data || !data.length){
-    mainPhoto.src = "";
-    return;
-  }
+        d.addEventListener("click", () => {
+          activeIndex = idx;
+          setHero(photos[activeIndex]?.signedUrl || null);
+          renderThumbs();
+        });
 
-  const main = data.find(p=>p.is_main) || data[0];
+        thumbs.appendChild(d);
+      });
 
-  const { data:signedMain } = await supabaseClient
-    .storage.from(BUCKET)
-    .createSignedUrl(main.path,3600);
+      setHero(photos[activeIndex]?.signedUrl || null);
+    }
 
-  mainPhoto.src = signedMain.signedUrl;
+    async function requireSessionOrRedirect(){
+      const { data, error } = await supabase.auth.getSession();
+      if (error || !data?.session){
+        window.location.href = "index.html";
+        return null;
+      }
+      return data.session;
+    }
 
-  for(const p of data){
-    const { data:signed } = await supabaseClient
-      .storage.from(BUCKET)
-      .createSignedUrl(p.path,3600);
+    async function loadProduct(recordId){
+      // On récupère uniquement ce dont la fiche a besoin
+      const { data, error } = await supabase
+        .from("ListeProduit")
+        .select("id, numero, article, taille, modele, couleur, date_ha, date_mise_en_ligne, date_vente, qui, prix_ha, ca_encaisse, client_id, date_recep")
+        .eq("id", recordId)
+        .single();
 
-    const img = document.createElement("img");
-    img.src = signed.signedUrl;
-    img.className = "thumb" + (p.id===main.id?" active":"");
+      if (error) throw error;
+      return data;
+    }
 
-    img.onclick = ()=>{
-      mainPhoto.src = signed.signedUrl;
-      document.querySelectorAll(".thumb").forEach(t=>t.classList.remove("active"));
-      img.classList.add("active");
-    };
+    async function loadPhotos(recordId){
+      const { data, error } = await supabase
+        .from("article_photos")
+        .select("id, path, is_main, sort_order")
+        .eq("article_id", recordId)
+        .order("is_main", { ascending: false })
+        .order("sort_order", { ascending: true })
+        .order("id", { ascending: true });
 
-    thumbs.appendChild(img);
-  }
+      if (error) throw error;
 
-  for(const p of data){
-    const { data:signed } = await supabaseClient
-      .storage.from(BUCKET)
-      .createSignedUrl(p.path,3600);
+      if (!data || !data.length) return [];
 
-    const g = document.createElement("img");
-    g.src = signed.signedUrl;
-    gallery.appendChild(g);
-  }
-}
+      // Générer des signed URLs
+      const out = [];
+      for (const p of data){
+        const { data: s, error: e2 } = await supabase
+          .storage
+          .from("Article-photos")
+          .createSignedUrl(p.path, 3600);
 
-/* -------------------------------------------------------------------------- */
-/* BOUTON MODIFIER */
-/* -------------------------------------------------------------------------- */
-$("btnEdit").onclick = ()=>{
-  location.href = "modificationarticle.html?id=" + recordId;
-};
+        if (!e2 && s?.signedUrl){
+          out.push({ ...p, signedUrl: s.signedUrl });
+        }
+      }
+      return out;
+    }
 
-/* -------------------------------------------------------------------------- */
-/* LANCEMENT GLOBAL AVEC SÉCURISATION SESSION */
-/* -------------------------------------------------------------------------- */
+    function fillUI(p){
+      // Top
+      el("chipId").textContent = `ID ${p.id}`;
+      el("pageTitle").textContent = `Fiche article`;
+      el("pageSubtitle").textContent = `${p.numero || "—"} • ${p.article || "—"} • ${p.modele || "—"}`;
 
-(async()=>{
-  console.log("⏳ Attente session Supabase…");
-  await waitForSession();
-  console.log("✅ Session restaurée, chargement article…");
-  await loadArticle();
-})();
-</script>
+      // Block 1
+      el("v_numero").textContent = p.numero ?? "—";
+      el("v_article").textContent = p.article ?? "—";
+      el("v_taille").textContent  = p.taille ?? "—";
+      el("v_modele").textContent  = p.modele ?? "—";
+      el("v_couleur").textContent = p.couleur ?? "—";
 
+      // Block 2
+      el("v_date_ha").textContent = formatDateFR(p.date_ha);
+      el("v_date_mise_en_ligne").textContent = formatDateFR(p.date_mise_en_ligne);
+      el("v_date_vente").textContent = formatDateFR(p.date_vente);
+      el("v_qui").textContent = p.qui ?? "—";
+
+      // Block 3
+      const prix = toNumber(p.prix_ha);
+      const ca = toNumber(p.ca_encaisse);
+
+      const marge = ca - prix;
+      const coef = (ca > 0 && prix > 0) ? (ca / prix) : 0;
+
+      el("v_prix_ha").textContent = fmtEuro(prix);
+      el("v_ca_encaisse").textContent = fmtEuro(ca);
+      el("v_marge").textContent = fmtEuro(marge);
+      el("v_coef").textContent = fmtCoef(coef);
+
+      // Block 4 (délais)
+      const dHA = parseDateSafe(p.date_ha);
+      const dMEL = parseDateSafe(p.date_mise_en_ligne);
+      const dV = parseDateSafe(p.date_vente);
+
+      const delaiMise = (dHA && dMEL) ? diffDays(dHA, dMEL) : null;
+      const delaiVente = (dMEL && dV) ? diffDays(dMEL, dV) : null;
+      const delaiAchatRevente = (dHA && dV) ? diffDays(dHA, dV) : null;
+
+      el("v_delai_mise").textContent = (delaiMise === null ? "—" : fmtDaysOrDash(delaiMise));
+      el("v_delai_vente").textContent = (delaiVente === null ? "—" : fmtDaysOrDash(delaiVente));
+      el("v_delai_achat_revente").textContent = (delaiAchatRevente === null ? "—" : fmtDaysOrDash(delaiAchatRevente));
+
+      // Block 5
+      el("v_client").textContent = p.client_id ?? "—";
+      el("v_date_recep").textContent = formatDateFR(p.date_recep);
+    }
+
+    function wireActions(recordId){
+      el("btnBack").addEventListener("click", () => {
+        // Retour simple : soit history, soit articles.html
+        if (window.history.length > 1) window.history.back();
+        else window.location.href = "articles.html";
+      });
+
+      el("btnEdit").addEventListener("click", () => {
+        window.location.href = `modificationarticle.html?id=${encodeURIComponent(recordId)}`;
+      });
+
+      el("btnLogout").addEventListener("click", async () => {
+        await supabase.auth.signOut();
+        window.location.href = "index.html";
+      });
+    }
+
+    async function main(){
+      const recordId = qs("id");
+      if (!recordId){
+        alert("ID manquant dans l'URL. Exemple : fichearticle.html?id=123");
+        window.location.href = "articles.html";
+        return;
+      }
+
+      showLoading(true);
+
+      const session = await requireSessionOrRedirect();
+      if (!session) return;
+
+      try{
+        const product = await loadProduct(recordId);
+        fillUI(product);
+        wireActions(recordId);
+
+        photos = await loadPhotos(recordId);
+
+        // Choisir la photo principale : is_main sinon première
+        const mainIdx = photos.findIndex(x => x.is_main);
+        activeIndex = mainIdx >= 0 ? mainIdx : 0;
+
+        renderThumbs();
+      }catch(err){
+        console.error(err);
+        alert("Impossible de charger la fiche (droits RLS, ID inexistant, ou erreur réseau).");
+        window.location.href = "articles.html";
+      }finally{
+        showLoading(false);
+      }
+    }
+
+    main();
+  </script>
 </body>
 </html>
