@@ -236,7 +236,7 @@ const reloadBtn=document.getElementById("btnReload");
 const count=document.getElementById("count");
 
 document.getElementById("btnHome").onclick=()=>location.href="index.html";
-document.getElementById("btnAdd").onclick=()=>location.href="admin.html";
+document.getElementById("btnAdd").onclick=()=>location.href="modificationarticle.html?mode=new";
 document.getElementById("btnLogout").onclick=async()=>{
   await sb.auth.signOut();
   location.href="index.html";
@@ -285,7 +285,7 @@ const table=new Tabulator("#table",{
       widthGrow:4,
       formatter:function(cell){
         const row=cell.getRow().getData();
-        return `<a href="fichearticle.html?id=${row.id}" 
+        return `<a href="modificationarticle.html?id=${row.id}&mode=view" 
                  style="color:inherit;text-decoration:none;font-weight:600;">
                  ${cell.getValue()}
                 </a>`;
