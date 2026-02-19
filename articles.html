@@ -11,22 +11,21 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.0/dist/css/tabulator.min.css">
 
 <style>
 :root{
   --bg:#0b1220;
-  --panel:rgba(255,255,255,.06);
   --border:rgba(255,255,255,.12);
-  --text:rgba(255,255,255,.92);
+  --text:#ffffff;
 }
 *{box-sizing:border-box}
 body{
   margin:0;
-  font-family:Inter,system-ui,-apple-system;
-  color:var(--text);
+  font-family:Inter,system-ui;
   background:var(--bg);
+  color:var(--text);
 }
 .wrap{max-width:1200px;margin:auto;padding:24px 16px}
 
@@ -39,11 +38,7 @@ body{
 }
 h1{margin:0;font-size:20px;font-weight:800}
 
-.actions{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
 
 .btn{
   padding:8px 12px;
@@ -55,11 +50,7 @@ h1{margin:0;font-size:20px;font-weight:800}
   font-weight:700;
   cursor:pointer;
 }
-.btn:hover{
-  background:rgba(124,92,255,.25);
-}
-
-/* ===== Filtres ===== */
+.btn:hover{background:rgba(124,92,255,.25)}
 
 .filters{
   display:flex;
@@ -98,19 +89,8 @@ h1{margin:0;font-size:20px;font-weight:800}
   font-weight:700;
   outline:none;
 }
-
-.input{min-width:110px}
-.select{min-width:140px}
-
-.inputN{
-  width:60px;
-  text-align:center;
-}
-
-.select option{
-  background:#0b1220;
-  color:white;
-}
+.inputN{width:60px;text-align:center}
+.select option{background:#0b1220;color:white}
 
 .chip{
   font-size:11px;
@@ -120,7 +100,29 @@ h1{margin:0;font-size:20px;font-weight:800}
   background:rgba(255,255,255,.05);
 }
 
-/* ===== Table ===== */
+/* ===== STATUS BADGES ===== */
+
+.statusBadge{
+  padding:3px 8px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:800;
+  text-align:center;
+  display:inline-block;
+  min-width:28px;
+}
+
+.status-stock{
+  background:rgba(255,255,255,.15);
+}
+.status-online{
+  background:rgba(124,92,255,.6);
+}
+.status-sold{
+  background:rgba(45,212,191,.6);
+}
+
+/* ===== TABLE ===== */
 
 .tabulator{
   background:transparent !important;
@@ -137,7 +139,7 @@ h1{margin:0;font-size:20px;font-weight:800}
   padding:6px !important;
 }
 
-/* ===== Responsive ===== */
+/* ===== RESPONSIVE ===== */
 
 @media(max-width:520px){
   .filters{
@@ -151,10 +153,6 @@ h1{margin:0;font-size:20px;font-weight:800}
     padding:6px 8px;
   }
   .inputN{width:50px}
-  .actions{
-    width:100%;
-    justify-content:flex-start;
-  }
 }
 </style>
 </head>
@@ -215,6 +213,12 @@ function computeStatus(r){
   return "EN STOCK";
 }
 
+function statusClass(status){
+  if(status==="VENDU") return "statusBadge status-sold";
+  if(status==="EN LIGNE") return "statusBadge status-online";
+  return "statusBadge status-stock";
+}
+
 const qInput=document.getElementById("q");
 const statusInput=document.getElementById("status");
 const numeroInput=document.getElementById("numero");
@@ -259,9 +263,25 @@ const table=new Tabulator("#table",{
   layout:"fitColumns",
   responsiveLayout:"collapse",
   columns:[
-    {title:"St",field:"__status",width:50,formatter:c=>c.getValue()[0]},
+    {
+      title:"St",
+      field:"__status",
+      width:60,
+      formatter:function(cell){
+        const status=cell.getValue();
+        return `<span class="${statusClass(status)}">${status[0]}</span>`;
+      }
+    },
     {title:"N",field:"numero",width:44,hozAlign:"center"},
-    {title:"Article",field:"article",widthGrow:4},
+    {
+      title:"Article",
+      field:"article",
+      widthGrow:4,
+      formatter:function(cell){
+        const row=cell.getRow().getData();
+        return `<a href="fichearticle.html?id=${row.id}" style="color:white;text-decoration:none;">${cell.getValue()}</a>`;
+      }
+    },
     {title:"T",field:"taille",width:60},
     {title:"C",field:"couleur",width:80},
     {title:"M",field:"modele",widthGrow:2}
@@ -275,10 +295,7 @@ async function load(){
     .order("id",{ascending:false})
     .limit(3000);
 
-  if(error){
-    console.error(error);
-    return;
-  }
+  if(error){console.error(error);return;}
 
   const rows=data.map(r=>({...r,__status:computeStatus(r)}));
   table.setData(rows);
