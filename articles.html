@@ -139,12 +139,12 @@
       white-space:pre-wrap;
     }
 
-    /* Tabulator - rendu plus compact + lisible */
+    /* Tabulator compact + lisible */
     .tabulator{
       border:none !important;
       background:transparent !important;
       color:var(--text) !important;
-      font-size:12px;           /* ✅ police réduite */
+      font-size:12px;
     }
     .tabulator .tabulator-header{
       background:rgba(255,255,255,.04) !important;
@@ -163,7 +163,7 @@
     }
     .tabulator .tabulator-cell{
       border-right:1px solid rgba(255,255,255,.05) !important;
-      padding:8px 8px !important;   /* ✅ plus compact */
+      padding:8px 8px !important;
     }
     .tabulator .tabulator-footer{
       background:rgba(255,255,255,.03) !important;
@@ -179,7 +179,7 @@
       font-size:12px !important;
     }
 
-    /* Badge statut */
+    /* Badge statut + cellules cliquables */
     .statusBadge{
       display:inline-flex;
       align-items:center;
@@ -194,6 +194,16 @@
     .status-sold{background:rgba(45,212,191,.18); border-color:rgba(45,212,191,.30)}
     .status-online{background:rgba(124,92,255,.18); border-color:rgba(124,92,255,.30)}
     .status-stock{background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.16)}
+
+    .clickable{
+      cursor:pointer;
+      text-decoration: underline;
+      text-decoration-color: rgba(255,255,255,.22);
+      text-underline-offset: 2px;
+    }
+    .clickable:hover{
+      text-decoration-color: rgba(124,92,255,.65);
+    }
   </style>
 </head>
 
@@ -292,6 +302,12 @@
       return normalizeStr(rowValue).includes(hv);
     }
 
+    function openFicheFromRow(rowData){
+      const id = rowData?.id;
+      if (id === undefined || id === null || id === "") return;
+      window.location.href = "fichearticle.html?id=" + encodeURIComponent(id);
+    }
+
     function applyQuickSearch(){
       if (!window.__table) return;
       const q = normalizeStr(el("quickSearch").value);
@@ -308,65 +324,63 @@
       });
     }
 
-  function buildTable(){
-  if (!window.Tabulator) throw new Error("Tabulator non chargé (CDN bloqué).");
+    function buildTable(){
+      if (!window.Tabulator) throw new Error("Tabulator non chargé (CDN bloqué).");
 
-  return new Tabulator("#table", {
-    layout:"fitColumns",
-    responsiveLayout:"hide",
-    height:"680px",
-    placeholder:"Aucune donnée",
+      return new Tabulator("#table", {
+        layout:"fitColumns",
+        responsiveLayout:"hide",
+        height:"680px",
+        placeholder:"Aucune donnée",
 
-    // ✅ Double-clic sur ligne => ouvrir la fiche
-    rowDblClick: function (e, row) {
-      const data = row.getData();
-      const id = data?.id;
-      if (id === undefined || id === null || id === "") return;
-      window.location.href = "fichearticle.html?id=" + encodeURIComponent(id);
-    },
-
-    columns:[
-      {
-        title:"Statut",
-        field:"__status",
-        width:130,
-        headerFilter:"input",
-        headerFilterFunc:containsFilter,
-        formatter:statusBadgeFormatter
-      },
-      {
-        title:"Article",
-        field:"article",
-        minWidth:420,
-        widthGrow:6,
-        headerFilter:"input",
-        headerFilterFunc:containsFilter
-      },
-      {
-        title:"Taille",
-        field:"taille",
-        width:90,
-        headerFilter:"input",
-        headerFilterFunc:containsFilter
-      },
-      {
-        title:"Couleur",
-        field:"couleur",
-        width:120,
-        headerFilter:"input",
-        headerFilterFunc:containsFilter
-      },
-      {
-        title:"Modèle",
-        field:"modele",
-        minWidth:160,
-        widthGrow:2,
-        headerFilter:"input",
-        headerFilterFunc:containsFilter
-      },
-    ],
-  });
-}
+        columns:[
+          {
+            title:"Statut",
+            field:"__status",
+            width:130,
+            headerFilter:"input",
+            headerFilterFunc:containsFilter,
+            formatter:statusBadgeFormatter,
+            cellClick:(e,cell)=>openFicheFromRow(cell.getRow().getData())
+          },
+          {
+            title:"Article",
+            field:"article",
+            minWidth:420,
+            widthGrow:6,
+            headerFilter:"input",
+            headerFilterFunc:containsFilter,
+            formatter:(cell)=>{
+              const v = cell.getValue() ?? "";
+              return `<span class="clickable">${String(v)}</span>`;
+            },
+            cellClick:(e,cell)=>openFicheFromRow(cell.getRow().getData())
+          },
+          {
+            title:"Taille",
+            field:"taille",
+            width:90,
+            headerFilter:"input",
+            headerFilterFunc:containsFilter
+          },
+          {
+            title:"Couleur",
+            field:"couleur",
+            width:120,
+            headerFilter:"input",
+            headerFilterFunc:containsFilter
+          },
+          {
+            title:"Modèle",
+            field:"modele",
+            minWidth:160,
+            widthGrow:2,
+            headerFilter:"input",
+            headerFilterFunc:containsFilter
+          },
+        ],
+      });
+    }
 
     async function loadData(table){
       clearError();
