@@ -291,6 +291,7 @@
           <div><span class="m">Délai achat→vente :</span> —</div>
         </div>
         <button class="btn primary" id="saveBtn">Enregistrer</button>
+        <button class="btn" id="toggleModeBtn">Lecture</button>
         <button class="btn" id="backBtn">Retour</button>
         <button class="btn danger" id="deleteBtn">Supprimer l'article</button>
       </div>
@@ -355,11 +356,6 @@
             <div class="kv">
               <div class="field"><div class="k">Prix HA</div><input type="number" step="0.01" id="prix_ha"></div>
               <div class="field"><div class="k">CA encaissé</div><input type="number" step="0.01" id="ca_encaisse"></div>
-              <div class="field"><div class="k">Prix en ligne</div><input type="number" step="0.01" id="prix_en_ligne"></div>
-              <div class="field"><div class="k">Coef en ligne</div><input type="number" step="0.01" id="coef_en_ligne"></div>
-              <div class="field"><div class="k">Marge en ligne</div><input type="number" step="0.01" id="marge_en_ligne"></div>
-              <div class="field"><div class="k">Coef marge</div><input type="number" step="0.01" id="coef_marge" disabled title="Calculé automatiquement : CA encaissé / Prix HA"></div>
-              <div class="field"><div class="k">Frais Vinted + livraison</div><input type="number" step="0.01" id="frais_vinted_livraison"></div>
               <div class="field" style="grid-column:1/-1">
                 <div class="k">Calculs</div>
                 <div class="calc" id="calc_financier">
@@ -399,11 +395,100 @@
     const supabaseKey = "sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
     const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    const recordId = new URLSearchParams(location.search).get("id");
-    if (!recordId || recordId === "undefined" || recordId === "null") location.href = "articles.html";
+    const __params = new URLSearchParams(location.search);
+let recordId = __params.get("id");
+if (recordId === "undefined" || recordId === "null") recordId = null;
+let mode = __params.get("mode");
+// modes: view | edit | new
+if (!mode) mode = recordId ? "view" : "new";
+
 
     const el = (id) => document.getElementById(id);
     const setLast = (txt) => el("last_action").value = txt;
+
+    // ===== Mode handling (single page: view / edit / new) =====
+    const ALWAYS_DISABLED = new Set(["id_read","last_action","coef_marge"]);
+    function setMode(newMode){
+      mode = newMode;
+      __params.set("mode", mode);
+
+      // Update URL (without reloading)
+      const qs = __params.toString();
+      history.replaceState(null, "", location.pathname + (qs ? ("?" + qs) : ""));
+
+      applyModeUI();
+    }
+
+    function applyModeUI(){
+      const isView = (mode === "view");
+      const isNew = (mode === "new");
+      const isEdit = (mode === "edit");
+
+      // Title + chips
+      if (!recordId){
+        el("chipId").textContent = "ID —";
+        el("id_read").value = "";
+      }
+
+      // Buttons visibility
+      el("saveBtn").style.display = (isView ? "none" : "inline-flex");
+      el("deleteBtn").style.display = (recordId && !isView ? "inline-flex" : "none");
+
+      // Toggle button text
+      if (isView) el("toggleModeBtn").textContent = "Modifier";
+      else el("toggleModeBtn").textContent = "Lecture";
+
+      // Inputs enabled/disabled
+      document.querySelectorAll("input").forEach(inp => {
+        if (ALWAYS_DISABLED.has(inp.id)) return; // keep disabled
+        // Special case: photo input handled below
+        if (inp.id === "photoInput") return;
+        inp.disabled = isView;
+      });
+
+      // Photo input
+      const photoInput = el("photoInput");
+      photoInput.disabled = isView || !recordId;
+
+      // Unsaved badge: never show in view mode
+      if (isView) setDirty(false);
+
+      // If new mode: hide delete, disable photo upload until created
+      if (isNew){
+        el("deleteBtn").style.display = "none";
+        photoInput.disabled = true;
+      }
+    }
+
+    function initNewForm(){
+      // reset inputs (except read-only)
+      const ids = [
+        "numero","article","taille","modele","couleur","qui",
+        "date_ha","date_mise_en_ligne","date_vente","date_recep","client_id",
+        "prix_ha","ca_encaisse","marge","prix_en_ligne","coef_en_ligne","marge_en_ligne","frais_vinted_livraison"
+      ];
+      ids.forEach(id => { if (el(id)) el(id).value = ""; });
+
+      // coef_marge is calculated field (disabled)
+      if (el("coef_marge")) el("coef_marge").value = "0.00";
+
+      el("chipId").textContent = "Nouveau";
+      el("subtitle").textContent = "Création d'un article";
+      updateStatus();
+      calcFinancier();
+      calcDelais();
+      updateMiniStats();
+
+      // Photos UI reset
+      photos = [];
+      activeIndex = 0;
+      el("photoCount").textContent = "0";
+      el("thumbs").style.display = "none";
+      setHero(null);
+
+      setLast("Nouveau (non enregistré)");
+      setDirty(false);
+    }
 
     // ===== Unsaved changes guard =====
     let hasChanges = false;
@@ -459,11 +544,8 @@
     function calcFinancier(){
       const prix = toNumber(el("prix_ha").value);
       const ca = toNumber(el("ca_encaisse").value);
-      const marge = (ca > 0) ? (ca - prix) : 0;
+      const marge = ca - prix;
       const coef = (prix > 0 && ca > 0) ? (ca / prix) : 0;
-
-      // Coef marge = Coef réalisé (calcul automatique : CA encaissé / Prix HA)
-      if (el("coef_marge")) el("coef_marge").value = coef.toFixed(2);
 
       el("calc_financier").innerHTML =
         `<span class="muted">Marge :</span> ${marge.toFixed(2)} € &nbsp; • &nbsp; <span class="muted">Coef :</span> ${coef.toFixed(2)}`;
@@ -482,7 +564,7 @@
     function updateMiniStats(){
       const prix = toNumber(el("prix_ha").value);
       const ca = toNumber(el("ca_encaisse").value);
-      const marge = (ca > 0) ? (ca - prix) : 0;
+      const marge = ca - prix;
 
       const dHA = parseDateSafe(el("date_ha").value);
       const dV = parseDateSafe(el("date_vente").value);
@@ -647,6 +729,8 @@
     }
 
     async function loadPhotos(){
+      if (!recordId) { photos = []; renderThumbs(); return; }
+
       const r = await sb.from("article_photos")
         .select("id, path, is_main, sort_order")
         .eq("article_id", Number(recordId))
@@ -680,6 +764,8 @@
 
     // ===== Article load/save =====
     async function loadProduct(){
+      if (!recordId) { initNewForm(); return; }
+
       const r = await sb.from("ListeProduit").select("*").eq("id", Number(recordId)).single();
       if (r.error){
         console.error(r.error);
@@ -694,14 +780,7 @@
       el("id_read").value = p.id;
       el("subtitle").textContent = `${p.numero || "—"} • ${p.article || "—"} • ${p.modele || "—"}`;
 
-const map = [
-  "numero","article","taille","modele","couleur",
-  "date_ha","date_mise_en_ligne","date_vente",
-  "qui",
-  "prix_ha","ca_encaisse",
-  "prix_en_ligne","coef_en_ligne","marge_en_ligne","coef_marge","frais_vinted_livraison",
-  "client_id","date_recep"
-];
+      const map = ["numero","article","taille","modele","couleur","date_ha","date_mise_en_ligne","date_vente","qui","prix_ha","ca_encaisse","client_id","date_recep"];
       map.forEach(k => { if (el(k)) el(k).value = (p[k] ?? ""); });
 
       updateStatus();
@@ -723,17 +802,31 @@ const map = [
         qui: el("qui").value,
         prix_ha: el("prix_ha").value === "" ? null : Number(el("prix_ha").value),
         ca_encaisse: el("ca_encaisse").value === "" ? null : Number(el("ca_encaisse").value),
-        marge: (() => { const prix = Number(el("prix_ha").value); const ca = Number(el("ca_encaisse").value); return (isFinite(prix) && isFinite(ca) && ca > 0) ? (ca - prix) : 0; })(),
         client_id: el("client_id").value,
-        date_recep: el("date_recep").value || null,
-        prix_en_ligne: el("prix_en_ligne").value === "" ? null : Number(el("prix_en_ligne").value),
-        coef_en_ligne: el("coef_en_ligne").value === "" ? null : Number(el("coef_en_ligne").value),
-        marge_en_ligne: el("marge_en_ligne").value === "" ? null : Number(el("marge_en_ligne").value),
-        coef_marge: (() => { const prix = Number(el("prix_ha").value); const ca = Number(el("ca_encaisse").value); return (isFinite(prix) && isFinite(ca) && prix > 0 && ca > 0) ? (ca / prix) : 0; })(),
-        frais_vinted_livraison: el("frais_vinted_livraison").value === "" ? null : Number(el("frais_vinted_livraison").value)
-
+        date_recep: el("date_recep").value || null
       };
 
+      // Create
+      if (!recordId){
+        const ins = await sb.from("ListeProduit").insert(payload).select("id").single();
+        if (ins.error){
+          alert("Création impossible : " + ins.error.message);
+          return;
+        }
+        recordId = String(ins.data.id);
+        __params.set("id", recordId);
+        setLast("Article créé");
+        setDirty(false);
+
+        // After creation: switch to edit mode and enable photos/delete
+        setMode("edit");
+        await loadProduct();
+        await loadPhotos();
+        alert("Créé");
+        return;
+      }
+
+      // Update
       const r = await sb.from("ListeProduit").update(payload).eq("id", Number(recordId));
       if (r.error){
         alert("Enregistrement impossible : " + r.error.message);
@@ -799,6 +892,10 @@ const map = [
 
     // Wire buttons
     el("saveBtn").addEventListener("click", save);
+    el("toggleModeBtn").addEventListener("click", () => {
+      if (mode === "view") setMode("edit");
+      else if (recordId) setMode("view");
+    });
     el("backBtn").addEventListener("click", () => {
       if (hasChanges){
         if (!confirm("Des modifications ne sont pas enregistrées. Quitter quand même ?")) return;
@@ -823,10 +920,20 @@ const map = [
 
     (async function main(){
       await requireSession();
+
+      // Apply mode UI now
+      applyModeUI();
+
       wireDirtyTracking();
       wireRecalcs();
-      await loadProduct();
-      await loadPhotos();
+
+      if (recordId){
+        await loadProduct();
+        await loadPhotos();
+      } else {
+        initNewForm();
+      }
+
       setLast("Page chargée");
       setDirty(false);
     })();
