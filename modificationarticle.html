@@ -723,6 +723,7 @@ const map = [
         qui: el("qui").value,
         prix_ha: el("prix_ha").value === "" ? null : Number(el("prix_ha").value),
         ca_encaisse: el("ca_encaisse").value === "" ? null : Number(el("ca_encaisse").value),
+        marge: (() => { const prix = Number(el("prix_ha").value); const ca = Number(el("ca_encaisse").value); return (isFinite(prix) && isFinite(ca) && ca > 0) ? (ca - prix) : 0; })(),
         client_id: el("client_id").value,
         date_recep: el("date_recep").value || null,
         prix_en_ligne: el("prix_en_ligne").value === "" ? null : Number(el("prix_en_ligne").value),
