@@ -1,544 +1,735 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Fiche article</title>
-
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --bg:#0b1220;
-      --panel:rgba(255,255,255,.06);
-      --border:rgba(255,255,255,.12);
-      --text:rgba(255,255,255,.92);
-      --muted:rgba(255,255,255,.65);
-      --muted2:rgba(255,255,255,.52);
-      --accent:#7c5cff;
-      --shadow:0 18px 60px rgba(0,0,0,.45);
-      --radius:18px;
-      --good:#2dd4bf;
-      --bad:#ff4d6d;
-      --warn:#fbbf24;
+      --bg: #0b1220;
+      --panel: rgba(255,255,255,.06);
+      --panel2: rgba(255,255,255,.085);
+      --border: rgba(255,255,255,.10);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.70);
+      --muted2: rgba(255,255,255,.55);
+      --accent: #7c5cff;
+      --accent2: #21d4fd;
+      --danger: #ff4d6d;
+      --ok: #2dd4bf;
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --radius: 18px;
     }
-    *{box-sizing:border-box}
+
+    *{ box-sizing: border-box; }
     body{
       margin:0;
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      color:var(--text);
-      min-height:100vh;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
       background:
         radial-gradient(1200px 600px at 10% -10%, rgba(124,92,255,.35), transparent 55%),
         radial-gradient(900px 500px at 95% 0%, rgba(33,212,253,.22), transparent 55%),
         radial-gradient(800px 500px at 60% 120%, rgba(45,212,191,.18), transparent 55%),
         var(--bg);
+      min-height: 100vh;
     }
-    .wrap{max-width:1200px;margin:0 auto;padding:24px 16px 60px}
+
+    a{ color: inherit; text-decoration: none; }
+
+    .wrap{
+      max-width: 1150px;
+      margin: 0 auto;
+      padding: 28px 18px 60px;
+    }
+
     .topbar{
-      display:flex;align-items:flex-start;justify-content:space-between;
-      gap:12px;flex-wrap:wrap;margin-bottom:14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      margin-bottom: 18px;
     }
-    h1{margin:0;font-size:22px;font-weight:900;letter-spacing:.2px}
-    .subtitle{color:var(--muted);font-size:13px;margin-top:6px}
-    .actions{display:flex;gap:10px;flex-wrap:wrap}
+
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap: 6px;
+    }
+    .title h1{
+      margin:0;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+    .subtitle{
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .actions{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+    }
+
     .btn{
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.06);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:12px;
-      font-weight:800;
-      font-size:13px;
-      cursor:pointer;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: transform .08s ease, background .15s ease, border-color .15s ease;
+      backdrop-filter: blur(10px);
     }
-    .btn:hover{background:rgba(124,92,255,.22)}
+    .btn:hover{
+      background: rgba(255,255,255,.10);
+      border-color: rgba(255,255,255,.16);
+    }
+    .btn:active{ transform: translateY(1px); }
     .btn.primary{
-      border-color:rgba(124,92,255,.45);
-      background:linear-gradient(135deg, rgba(124,92,255,.35), rgba(33,212,253,.14));
+      border-color: rgba(124,92,255,.45);
+      background: linear-gradient(135deg, rgba(124,92,255,.25), rgba(33,212,253,.12));
     }
     .btn.danger{
-      border-color:rgba(255,77,109,.45);
-      background:rgba(255,77,109,.12);
+      border-color: rgba(255,77,109,.45);
+      background: rgba(255,77,109,.10);
+      color: rgba(255,255,255,.92);
     }
 
     .grid{
       display:grid;
-      grid-template-columns: 1.3fr 1fr;
-      gap:14px;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 16px;
       align-items:start;
     }
-    @media(max-width:980px){
-      .grid{grid-template-columns:1fr}
+
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
     }
 
     .panel{
-      background:var(--panel);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
       overflow:hidden;
       backdrop-filter: blur(12px);
     }
+
     .panelHeader{
-      padding:14px 16px;
-      border-bottom:1px solid var(--border);
-      background:rgba(255,255,255,.03);
-      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
-    }
-    .panelHeader .h{font-weight:900;font-size:14px}
-    .panelBody{padding:14px 16px}
-
-    .photoWrap{
-      border-radius:16px;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.04);
-      aspect-ratio: 4 / 3;
-      display:flex;align-items:center;justify-content:center;
-    }
-    .photoWrap img{width:100%;height:100%;object-fit:cover;display:block}
-    .placeholder{
-      color:var(--muted2);
-      font-weight:900;
-      font-size:13px;
-      padding:18px;
-      text-align:center;
-    }
-
-    .thumbs{
-      margin-top:10px;
       display:flex;
-      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,.03);
+    }
+    .panelHeader .h{
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: .2px;
+    }
+    .panelHeader .chip{
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+    }
+
+    /* Gallery */
+    .gallery{
+      padding: 14px;
+    }
+    .hero{
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+    }
+    .hero img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display:block;
+    }
+    .hero .placeholder{
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color: var(--muted2);
+      font-weight: 600;
+      font-size: 13px;
+      text-align:center;
+      padding: 10px;
+    }
+    .thumbs{
+      display:flex;
+      gap: 10px;
+      margin-top: 12px;
       overflow:auto;
-      padding-bottom:2px;
+      padding-bottom: 2px;
     }
     .thumb{
-      width:76px;height:58px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.12);
+      flex: 0 0 auto;
+      width: 72px;
+      height: 56px;
+      border-radius: 12px;
       overflow:hidden;
-      background:rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
       cursor:pointer;
-      flex:0 0 auto;
+      position:relative;
+      transition: transform .08s ease, border-color .15s ease;
     }
-    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
-    .thumb.active{outline:2px solid rgba(124,92,255,.7)}
+    .thumb:hover{ border-color: rgba(255,255,255,.22); }
+    .thumb:active{ transform: translateY(1px); }
+    .thumb img{ width:100%; height:100%; object-fit: cover; display:block; }
+    .thumb.active{
+      border-color: rgba(124,92,255,.65);
+      box-shadow: 0 0 0 3px rgba(124,92,255,.15);
+    }
 
-    .kvs{
+    /* Cards column */
+    .cards{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .card{
+      padding: 14px 16px 16px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 18px;
+    }
+    .cardTitle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom: 10px;
+      gap: 12px;
+    }
+    .cardTitle span{
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: .25px;
+    }
+    .cardTitle small{
+      color: var(--muted2);
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .kv{
       display:grid;
       grid-template-columns: 1fr 1fr;
-      gap:10px 14px;
+      gap: 10px 14px;
     }
-    @media(max-width:520px){
-      .kvs{grid-template-columns:1fr}
+    @media (max-width: 520px){
+      .kv{ grid-template-columns: 1fr; }
     }
-    .kv{
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.04);
+    .row{
+      display:flex;
+      flex-direction:column;
+      gap: 4px;
+      padding: 10px 10px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.07);
     }
-    .kv .k{color:var(--muted2);font-size:12px;font-weight:900;letter-spacing:.02em}
-    .kv .v{margin-top:6px;font-size:13px;font-weight:900;word-break:break-word}
+    .k{
+      font-size: 11px;
+      color: var(--muted2);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .v{
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.25;
+      word-break: break-word;
+    }
+    .v.muted{ color: var(--muted); font-weight: 650; }
 
-    .badges{display:flex;gap:8px;flex-wrap:wrap}
-    .badge{
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.05);
-      color:var(--muted);
-      font-weight:900;
-      font-size:12px;
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
     }
-    .badge.good{border-color:rgba(45,212,191,.35);background:rgba(45,212,191,.12);color:rgba(255,255,255,.92)}
-    .badge.warn{border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.12);color:rgba(255,255,255,.92)}
-    .badge.bad{border-color:rgba(255,77,109,.35);background:rgba(255,77,109,.12);color:rgba(255,255,255,.92)}
 
-    .errorBox{
-      margin-top:14px;
-      padding:12px 14px;
-      border-radius:14px;
-      border:1px solid rgba(255,77,109,.35);
-      background:rgba(255,77,109,.10);
-      color:rgba(255,255,255,.92);
-      display:none;
-      font-weight:800;
-      font-size:13px;
-      line-height:1.4;
-      white-space:pre-wrap;
+    .footerNote{
+      margin-top: 14px;
+      color: var(--muted2);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .loadingOverlay{
+      position: fixed;
+      inset: 0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(0,0,0,.35);
+      backdrop-filter: blur(6px);
+      z-index: 50;
+      padding: 20px;
+    }
+    .loadingBox{
+      width: min(520px, 92vw);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(12,18,32,.82);
+      box-shadow: var(--shadow);
+      padding: 18px 16px;
+    }
+    .loadingBox .t{
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: .2px;
+    }
+    .loadingBox .s{
+      color: var(--muted);
+      font-size: 13px;
     }
   </style>
 </head>
 
 <body>
+  <div id="loading" class="loadingOverlay" style="display:none">
+    <div class="loadingBox">
+      <div class="t">Chargement…</div>
+      <div class="s">Récupération des informations article et des photos.</div>
+    </div>
+  </div>
+
   <div class="wrap">
     <div class="topbar">
-      <div>
-        <h1 id="title">Fiche article</h1>
-        <div class="subtitle" id="sub">—</div>
+      <div class="title">
+        <h1 id="pageTitle">Fiche article</h1>
+        <div class="subtitle" id="pageSubtitle">—</div>
       </div>
+
       <div class="actions">
-        <button class="btn" id="btnBack">Retour</button>
-        <button class="btn" id="btnEdit">Modifier</button>
+        <button class="btn" id="btnBack">← Retour</button>
+        <button class="btn primary" id="btnEdit">Modifier</button>
         <button class="btn danger" id="btnLogout">Déconnexion</button>
       </div>
     </div>
 
     <div class="grid">
-      <!-- Colonne gauche : photos -->
+      <!-- Left: gallery -->
       <div class="panel">
         <div class="panelHeader">
           <div class="h">Photos</div>
-          <div class="badges" id="statusBadges"></div>
+          <div class="chip" id="photoCount">0</div>
         </div>
-        <div class="panelBody">
-          <div class="photoWrap" id="mainPhotoWrap">
-            <div class="placeholder">Aucune photo</div>
+        <div class="gallery">
+          <div class="hero" id="hero">
+            <div class="placeholder">Aucune photo disponible</div>
           </div>
-          <div class="thumbs" id="thumbs" style="display:none;"></div>
+          <div class="thumbs" id="thumbs" style="display:none"></div>
+
+          <div class="footerNote">
+            Astuce : la photo principale est celle marquée <strong>is_main</strong> (sinon la première par ordre).
+          </div>
         </div>
       </div>
 
-      <!-- Colonne droite : infos -->
-      <div style="display:flex; flex-direction:column; gap:14px;">
-        <div class="panel">
-          <div class="panelHeader"><div class="h">Produit</div></div>
-          <div class="panelBody">
-            <div class="kvs">
-              <div class="kv"><div class="k">Numéro</div><div class="v" id="v_numero">—</div></div>
-              <div class="kv"><div class="k">Article</div><div class="v" id="v_article">—</div></div>
-              <div class="kv"><div class="k">Taille</div><div class="v" id="v_taille">—</div></div>
-              <div class="kv"><div class="k">Modèle</div><div class="v" id="v_modele">—</div></div>
-              <div class="kv"><div class="k">Couleur</div><div class="v" id="v_couleur">—</div></div>
-            </div>
-          </div>
+      <!-- Right: cards -->
+      <div class="panel">
+        <div class="panelHeader">
+          <div class="h">Informations</div>
+          <div class="chip" id="chipId">ID —</div>
         </div>
 
-        <div class="panel">
-          <div class="panelHeader"><div class="h">Dates</div></div>
-          <div class="panelBody">
-            <div class="kvs">
-              <div class="kv"><div class="k">Date HA</div><div class="v" id="v_date_ha">—</div></div>
-              <div class="kv"><div class="k">Date mise en ligne</div><div class="v" id="v_date_mise">—</div></div>
-              <div class="kv"><div class="k">Date vente</div><div class="v" id="v_date_vente">—</div></div>
-              <div class="kv"><div class="k">Qui</div><div class="v" id="v_qui">—</div></div>
+        <div class="gallery" style="padding-top: 12px;">
+          <div class="cards">
+            <!-- Block 1 -->
+            <div class="card">
+              <div class="cardTitle">
+                <span>Identité produit</span>
+                <small>Bloc 1</small>
+              </div>
+              <div class="kv">
+                <div class="row"><div class="k">Numéro</div><div class="v" id="v_numero">—</div></div>
+                <div class="row"><div class="k">Article</div><div class="v" id="v_article">—</div></div>
+                <div class="row"><div class="k">Taille</div><div class="v" id="v_taille">—</div></div>
+                <div class="row"><div class="k">Modèle</div><div class="v" id="v_modele">—</div></div>
+                <div class="row"><div class="k">Couleur</div><div class="v" id="v_couleur">—</div></div>
+              </div>
             </div>
+
+            <!-- Block 2 -->
+            <div class="card">
+              <div class="cardTitle">
+                <span>Dates & suivi</span>
+                <small>Bloc 2</small>
+              </div>
+              <div class="kv">
+                <div class="row"><div class="k">Date HA</div><div class="v" id="v_date_ha">—</div></div>
+                <div class="row"><div class="k">Date mise en ligne</div><div class="v" id="v_date_mise_en_ligne">—</div></div>
+                <div class="row"><div class="k">Date vente</div><div class="v" id="v_date_vente">—</div></div>
+                <div class="row"><div class="k">Qui</div><div class="v" id="v_qui">—</div></div>
+              </div>
+            </div>
+
+            <!-- Block 3 -->
+            <div class="card">
+              <div class="cardTitle">
+                <span>Financier</span>
+                <small>Bloc 3</small>
+              </div>
+              <div class="kv">
+                <div class="row"><div class="k">Prix HA</div><div class="v" id="v_prix_ha">—</div></div>
+                <div class="row"><div class="k">CA encaissé</div><div class="v" id="v_ca_encaisse">—</div></div>
+                <div class="row"><div class="k">Marge dégagée</div><div class="v" id="v_marge">—</div></div>
+                <div class="row"><div class="k">Coef réalisé</div><div class="v" id="v_coef">—</div></div>
+
+                <!-- ✅ AJOUT : nouveaux champs -->
+                <div class="row"><div class="k">Prix en ligne</div><div class="v" id="v_prix_en_ligne">—</div></div>
+                <div class="row"><div class="k">Coef en ligne</div><div class="v" id="v_coef_en_ligne">—</div></div>
+                <div class="row"><div class="k">Marge en ligne</div><div class="v" id="v_marge_en_ligne">—</div></div>
+                <div class="row"><div class="k">Coef marge</div><div class="v" id="v_coef_marge">—</div></div>
+                <div class="row"><div class="k">Frais Vinted + livraison</div><div class="v" id="v_frais_vinted_livraison">—</div></div>
+              </div>
+            </div>
+
+            <!-- Block 4 -->
+            <div class="card">
+              <div class="cardTitle">
+                <span>Délais</span>
+                <small>Bloc 4</small>
+              </div>
+              <div class="kv">
+                <div class="row"><div class="k">Délai mise en ligne</div><div class="v" id="v_delai_mise">—</div></div>
+                <div class="row"><div class="k">Délai vente</div><div class="v" id="v_delai_vente">—</div></div>
+                <div class="row"><div class="k">Délai achat → revente</div><div class="v" id="v_delai_achat_revente">—</div></div>
+              </div>
+            </div>
+
+            <!-- Block 5 -->
+            <div class="card">
+              <div class="cardTitle">
+                <span>Client & réception</span>
+                <small>Bloc 5</small>
+              </div>
+              <div class="kv">
+                <div class="row"><div class="k">Client</div><div class="v" id="v_client">—</div></div>
+                <div class="row"><div class="k">Date réception</div><div class="v" id="v_date_recep">—</div></div>
+              </div>
+            </div>
+
+            <div class="footerNote" id="debugNote" style="display:none"></div>
           </div>
         </div>
-
-        <div class="panel">
-          <div class="panelHeader"><div class="h">Financier</div></div>
-          <div class="panelBody">
-            <div class="kvs">
-              <div class="kv"><div class="k">Prix HA</div><div class="v" id="v_prix_ha">—</div></div>
-              <div class="kv"><div class="k">CA encaissé</div><div class="v" id="v_ca">—</div></div>
-              <div class="kv"><div class="k">Marge dégagée</div><div class="v" id="v_marge">—</div></div>
-              <div class="kv"><div class="k">Coef réalisé</div><div class="v" id="v_coef">—</div></div>
-
-              <!-- ✅ Nouveaux champs -->
-              <div class="kv"><div class="k">Prix en ligne</div><div class="v" id="v_prix_en_ligne">—</div></div>
-              <div class="kv"><div class="k">Coef en ligne</div><div class="v" id="v_coef_en_ligne">—</div></div>
-              <div class="kv"><div class="k">Marge en ligne</div><div class="v" id="v_marge_en_ligne">—</div></div>
-              <div class="kv"><div class="k">Coef marge</div><div class="v" id="v_coef_marge">—</div></div>
-              <div class="kv"><div class="k">Frais Vinted + livraison</div><div class="v" id="v_frais_vinted_livraison">—</div></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panelHeader"><div class="h">Délais</div></div>
-          <div class="panelBody">
-            <div class="kvs">
-              <div class="kv"><div class="k">Délai mise en ligne</div><div class="v" id="v_delai_mise">—</div></div>
-              <div class="kv"><div class="k">Délai vente</div><div class="v" id="v_delai_vente">—</div></div>
-              <div class="kv"><div class="k">Délai achat → revente</div><div class="v" id="v_delai_total">—</div></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panelHeader"><div class="h">Client</div></div>
-          <div class="panelBody">
-            <div class="kvs">
-              <div class="kv"><div class="k">Client</div><div class="v" id="v_client">—</div></div>
-              <div class="kv"><div class="k">Date réception</div><div class="v" id="v_date_recep">—</div></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="errorBox" id="err"></div>
       </div>
     </div>
   </div>
 
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <script>
-    const supabaseUrl="https://ghgmifhqgqiqignowred.supabase.co";
-    const supabaseKey="sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
-    const sb=window.supabase.createClient(supabaseUrl,supabaseKey);
+    // ======= CONFIG SUPABASE (reprend ton pattern actuel) =======
+    const supabaseUrl = "https://ghgmifhqgqiqignowred.supabase.co";
+    const supabaseKey = "sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
+    const sp = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    const $ = (id)=>document.getElementById(id);
+    // ======= Helpers UI =======
+    const el = (id) => document.getElementById(id);
 
-    function showError(msg){
-      $("err").style.display="block";
-      $("err").textContent=msg;
-    }
-    function clearError(){
-      $("err").style.display="none";
-      $("err").textContent="";
+    function showLoading(on){
+      el("loading").style.display = on ? "flex" : "none";
     }
 
-    function getIdFromUrl(){
-      const p = new URLSearchParams(location.search);
-      return p.get("id");
+    function qs(name){
+      return new URLSearchParams(location.search).get(name);
     }
 
-    function fmtMoney(v){
+    function toNumber(v){
       const n = Number(v);
-      if (!isFinite(n)) return "—";
-      return n.toLocaleString("fr-FR",{style:"currency",currency:"EUR"});
+      return Number.isFinite(n) ? n : 0;
     }
-    function fmtNumber(v, digits=2){
-      const n = Number(v);
-      if (!isFinite(n)) return "—";
-      return n.toLocaleString("fr-FR",{minimumFractionDigits:digits,maximumFractionDigits:digits});
+
+    function isEmptyDate(v){
+      return v === null || v === undefined || v === "" || v === "0";
     }
-    function fmtDate(v){
-      if (!v) return "—";
-      // accepte ISO string / date
+
+    function parseDateSafe(v){
+      if (isEmptyDate(v)) return null;
+      // Supabase peut renvoyer "YYYY-MM-DD" ou ISO
       const d = new Date(v);
-      if (isNaN(d.getTime())) return String(v);
-      return d.toLocaleDateString("fr-FR");
-    }
-    function daysBetween(a,b){
-      if(!a || !b) return null;
-      const da = new Date(a), db = new Date(b);
-      if (isNaN(da.getTime()) || isNaN(db.getTime())) return null;
-      const ms = db.getTime() - da.getTime();
-      return Math.round(ms / (1000*60*60*24));
+      if (Number.isNaN(d.getTime())) return null;
+      return d;
     }
 
-    function computeStatus(row){
-      if (row?.date_vente) return {label:"Vendu", cls:"badge good"};
-      if (row?.date_mise_en_ligne) return {label:"En ligne", cls:"badge warn"};
-      return {label:"En stock", cls:"badge"};
+    function formatDateFR(v){
+      const d = parseDateSafe(v);
+      if (!d) return "—";
+      return new Intl.DateTimeFormat("fr-FR", { day:"2-digit", month:"2-digit", year:"numeric" }).format(d);
     }
 
-    function setText(id, value){
-      $(id).textContent = (value === null || value === undefined || value === "") ? "—" : String(value);
+    function diffDays(a, b){
+      // Renvoie b - a en jours (entier)
+      if (!a || !b) return null;
+      const ms = b.getTime() - a.getTime();
+      const days = Math.round(ms / (1000 * 60 * 60 * 24));
+      return Number.isFinite(days) ? days : null;
     }
 
-    function setMainPhoto(url){
-      const wrap = $("mainPhotoWrap");
-      wrap.innerHTML = "";
+    function fmtEuro(v){
+      const n = toNumber(v);
+      return new Intl.NumberFormat("fr-FR", { style:"currency", currency:"EUR" }).format(n);
+    }
+
+    function fmtCoef(v){
+      const n = Number(v);
+      if (!Number.isFinite(n)) return "0,00";
+      return new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+    }
+
+    function fmtDaysOrDash(days){
+      if (days === null || days === undefined) return "—";
+      if (!Number.isFinite(days)) return "—";
+      return `${days} jour${Math.abs(days) > 1 ? "s" : ""}`;
+    }
+
+    // ======= Gallery state =======
+    let photos = [];
+    let activeIndex = 0;
+
+    function setHero(url){
+      const hero = el("hero");
+      hero.innerHTML = "";
       if (!url){
-        wrap.innerHTML = `<div class="placeholder">Aucune photo</div>`;
+        const p = document.createElement("div");
+        p.className = "placeholder";
+        p.textContent = "Aucune photo disponible";
+        hero.appendChild(p);
         return;
       }
       const img = document.createElement("img");
       img.src = url;
       img.alt = "Photo principale";
-      img.loading = "lazy";
-      wrap.appendChild(img);
+      hero.appendChild(img);
     }
 
-    function renderThumbs(urls, mainUrl){
-      const thumbs = $("thumbs");
-      if (!urls || urls.length <= 1){
-        thumbs.style.display="none";
-        thumbs.innerHTML="";
+    function renderThumbs(){
+      const thumbs = el("thumbs");
+      if (!photos.length){
+        thumbs.style.display = "none";
+        el("photoCount").textContent = "0";
+        setHero(null);
         return;
       }
-      thumbs.style.display="flex";
-      thumbs.innerHTML="";
-      urls.forEach(u=>{
-        const div = document.createElement("div");
-        div.className = "thumb" + (u === mainUrl ? " active":"");
+
+      el("photoCount").textContent = `${photos.length}`;
+      thumbs.style.display = "flex";
+      thumbs.innerHTML = "";
+
+      photos.forEach((p, idx) => {
+        const d = document.createElement("div");
+        d.className = "thumb" + (idx === activeIndex ? " active" : "");
         const img = document.createElement("img");
-        img.src = u; img.loading="lazy";
-        div.appendChild(img);
-        div.addEventListener("click", ()=>{
-          setMainPhoto(u);
-          [...thumbs.querySelectorAll(".thumb")].forEach(t=>t.classList.remove("active"));
-          div.classList.add("active");
+        img.src = p.signedUrl;
+        img.alt = "Miniature";
+        d.appendChild(img);
+
+        d.addEventListener("click", () => {
+          activeIndex = idx;
+          setHero(photos[activeIndex]?.signedUrl || null);
+          renderThumbs();
         });
-        thumbs.appendChild(div);
+
+        thumbs.appendChild(d);
       });
+
+      setHero(photos[activeIndex]?.signedUrl || null);
     }
 
-    async function requireSession(){
-      const {data, error} = await sb.auth.getSession();
-      if (error) throw error;
-      if (!data.session){
-        location.href="index.html";
+    async function requireSessionOrRedirect(){
+      const { data, error } = await sp.auth.getSession();
+      if (error || !data?.session){
+        window.location.href = "index.html";
         return null;
       }
-      $("sub").textContent = "Connecté : " + (data.session.user?.email || "—");
       return data.session;
     }
 
-    async function loadArticle(id){
-      // ✅ On sélectionne explicitement les champs + nouveaux champs (noms EXACTS)
-      const {data, error} = await sb
+    async function loadProduct(recordId){
+      // On récupère uniquement ce dont la fiche a besoin
+      const { data, error } = await sp
         .from("ListeProduit")
-        .select(`
-          id,
-          numero,
-          article,
-          taille,
-          modele,
-          couleur,
-          date_ha,
-          date_mise_en_ligne,
-          date_vente,
-          qui,
-          prix_ha,
-          ca_encaisse,
-          client_id,
-          date_recep,
-
-          prix_en_ligne,
-          coef_en_ligne,
-          marge_en_ligne,
-          coef_marge,
-          frais_vinted_livraison,
-
-          photo_principale_url,
-          photo_principale
-        `)
-        .eq("id", id)
+        .select("id, numero, article, taille, modele, couleur, date_ha, date_mise_en_ligne, date_vente, qui, prix_ha, ca_encaisse, client_id, date_recep, prix_en_ligne, coef_en_ligne, marge_en_ligne, coef_marge, frais_vinted_livraison")
+        .eq("id", recordId)
         .single();
 
       if (error) throw error;
       return data;
     }
 
-    // Optionnel : si tu as une table PhotosProduit (produit_id, url, is_main)
-    async function tryLoadPhotos(id){
-      try{
-        const {data, error} = await sb
-          .from("PhotosProduit")
-          .select("url, is_main")
-          .eq("produit_id", id)
-          .order("is_main", {ascending:false});
-        if (error) return [];
-        return data || [];
-      }catch{
-        return [];
+    async function loadPhotos(recordId){
+      const { data, error } = await sp
+        .from("article_photos")
+        .select("id, path, is_main, sort_order")
+        .eq("article_id", recordId)
+        .order("is_main", { ascending: false })
+        .order("sort_order", { ascending: true })
+        .order("id", { ascending: true });
+
+      if (error) throw error;
+
+      if (!data || !data.length) return [];
+
+      // Générer des signed URLs
+      const out = [];
+      for (const p of data){
+        const { data: s, error: e2 } = await sp
+          .storage
+          .from("Article-photos")
+          .createSignedUrl(p.path, 3600);
+
+        if (!e2 && s?.signedUrl){
+          out.push({ ...p, signedUrl: s.signedUrl });
+        }
       }
+      return out;
     }
 
-    function fillUI(row){
-      // titre
-      const title = `${row?.numero ?? ""} ${row?.article ?? ""}`.trim() || "Fiche article";
-      $("title").textContent = title;
+    function fillUI(p){
+      // Top
+      el("chipId").textContent = `ID ${p.id}`;
+      el("pageTitle").textContent = `Fiche article`;
+      el("pageSubtitle").textContent = `${p.numero || "—"} • ${p.article || "—"} • ${p.modele || "—"}`;
 
-      // badge statut
-      const st = computeStatus(row);
-      $("statusBadges").innerHTML = `<span class="${st.cls}">${st.label}</span>`;
+      // Block 1
+      el("v_numero").textContent = p.numero ?? "—";
+      el("v_article").textContent = p.article ?? "—";
+      el("v_taille").textContent  = p.taille ?? "—";
+      el("v_modele").textContent  = p.modele ?? "—";
+      el("v_couleur").textContent = p.couleur ?? "—";
 
-      // produit
-      setText("v_numero", row.numero);
-      setText("v_article", row.article);
-      setText("v_taille", row.taille);
-      setText("v_modele", row.modele);
-      setText("v_couleur", row.couleur);
+      // Block 2
+      el("v_date_ha").textContent = formatDateFR(p.date_ha);
+      el("v_date_mise_en_ligne").textContent = formatDateFR(p.date_mise_en_ligne);
+      el("v_date_vente").textContent = formatDateFR(p.date_vente);
+      el("v_qui").textContent = p.qui ?? "—";
 
-      // dates
-      setText("v_date_ha", fmtDate(row.date_ha));
-      setText("v_date_mise", fmtDate(row.date_mise_en_ligne));
-      setText("v_date_vente", fmtDate(row.date_vente));
-      setText("v_qui", row.qui);
+      // Block 3
+      const prix = toNumber(p.prix_ha);
+      const ca = toNumber(p.ca_encaisse);
 
-      // financier (anciens + calculs)
-      const prixHA = Number(row.prix_ha) || 0;
-      const ca = Number(row.ca_encaisse) || 0;
-      const marge = (ca || 0) - (prixHA || 0);
-      const coef = (ca > 0 && prixHA > 0) ? (ca / prixHA) : 0;
+      const marge = ca - prix;
+      const coef = (ca > 0 && prix > 0) ? (ca / prix) : 0;
 
-      setText("v_prix_ha", row.prix_ha !== null && row.prix_ha !== undefined ? fmtMoney(row.prix_ha) : "—");
-      setText("v_ca", row.ca_encaisse !== null && row.ca_encaisse !== undefined ? fmtMoney(row.ca_encaisse) : "—");
-      setText("v_marge", fmtMoney(marge));
-      setText("v_coef", fmtNumber(coef, 2));
+      el("v_prix_ha").textContent = fmtEuro(prix);
+      el("v_ca_encaisse").textContent = fmtEuro(ca);
+      el("v_marge").textContent = fmtEuro(marge);
+      el("v_coef").textContent = fmtCoef(coef);
 
-      // ✅ nouveaux champs (affichage simple)
-      setText("v_prix_en_ligne", row.prix_en_ligne !== null && row.prix_en_ligne !== undefined ? fmtMoney(row.prix_en_ligne) : "—");
-      setText("v_coef_en_ligne", row.coef_en_ligne !== null && row.coef_en_ligne !== undefined ? fmtNumber(row.coef_en_ligne, 2) : "—");
-      setText("v_marge_en_ligne", row.marge_en_ligne !== null && row.marge_en_ligne !== undefined ? fmtMoney(row.marge_en_ligne) : "—");
-      setText("v_coef_marge", row.coef_marge !== null && row.coef_marge !== undefined ? fmtNumber(row.coef_marge, 2) : "—");
-      setText("v_frais_vinted_livraison", row.frais_vinted_livraison !== null && row.frais_vinted_livraison !== undefined ? fmtMoney(row.frais_vinted_livraison) : "—");
+      // ✅ AJOUT : nouveaux champs (affichage)
+      el("v_prix_en_ligne").textContent = fmtEuro(p.prix_en_ligne);
+      el("v_coef_en_ligne").textContent = fmtCoef(p.coef_en_ligne);
+      el("v_marge_en_ligne").textContent = fmtEuro(p.marge_en_ligne);
+      el("v_coef_marge").textContent = fmtCoef(p.coef_marge);
+      el("v_frais_vinted_livraison").textContent = fmtEuro(p.frais_vinted_livraison);
 
-      // délais
-      const dMise = daysBetween(row.date_ha, row.date_mise_en_ligne);
-      const dVente = daysBetween(row.date_mise_en_ligne, row.date_vente);
-      const dTotal = daysBetween(row.date_ha, row.date_vente);
+      // Block 4 (délais)
+      const dHA = parseDateSafe(p.date_ha);
+      const dMEL = parseDateSafe(p.date_mise_en_ligne);
+      const dV = parseDateSafe(p.date_vente);
 
-      setText("v_delai_mise", dMise === null ? "—" : `${dMise} j`);
-      setText("v_delai_vente", dVente === null ? "—" : `${dVente} j`);
-      setText("v_delai_total", dTotal === null ? "—" : `${dTotal} j`);
+      const delaiMise = (dHA && dMEL) ? diffDays(dHA, dMEL) : null;
+      const delaiVente = (dMEL && dV) ? diffDays(dMEL, dV) : null;
+      const delaiAchatRevente = (dHA && dV) ? diffDays(dHA, dV) : null;
 
-      // client
-      setText("v_client", row.client_id);
-      setText("v_date_recep", fmtDate(row.date_recep));
+      el("v_delai_mise").textContent = (delaiMise === null ? "—" : fmtDaysOrDash(delaiMise));
+      el("v_delai_vente").textContent = (delaiVente === null ? "—" : fmtDaysOrDash(delaiVente));
+      el("v_delai_achat_revente").textContent = (delaiAchatRevente === null ? "—" : fmtDaysOrDash(delaiAchatRevente));
+
+      // Block 5
+      el("v_client").textContent = p.client_id ?? "—";
+      el("v_date_recep").textContent = formatDateFR(p.date_recep);
     }
 
-    (async function main(){
+    function wireActions(recordId){
+      el("btnBack").addEventListener("click", () => {
+        // Retour simple : soit history, soit articles.html
+        if (window.history.length > 1) window.history.back();
+        else window.location.href = "articles.html";
+      });
+
+      el("btnEdit").addEventListener("click", () => {
+        window.location.href = `modificationarticle.html?id=${encodeURIComponent(recordId)}`;
+      });
+
+      el("btnLogout").addEventListener("click", async () => {
+        await sp.auth.signOut();
+        window.location.href = "index.html";
+      });
+    }
+
+    async function main(){
+      const recordId = qs("id");
+      if (!recordId){
+        alert("ID manquant dans l'URL. Exemple : fichearticle.html?id=123");
+        window.location.href = "articles.html";
+        return;
+      }
+
+      showLoading(true);
+
+      const session = await requireSessionOrRedirect();
+      if (!session) return;
+
       try{
-        clearError();
+        const product = await loadProduct(recordId);
+        fillUI(product);
+        wireActions(recordId);
 
-        const id = getIdFromUrl();
-        if (!id){
-          showError("Paramètre manquant : id");
-          return;
-        }
+        photos = await loadPhotos(recordId);
 
-        await requireSession();
+        // Choisir la photo principale : is_main sinon première
+        const mainIdx = photos.findIndex(x => x.is_main);
+        activeIndex = mainIdx >= 0 ? mainIdx : 0;
 
-        // boutons
-        $("btnBack").addEventListener("click", ()=>history.length > 1 ? history.back() : (location.href="articles.html"));
-        $("btnEdit").addEventListener("click", ()=>location.href = "modificationarticle.html?id=" + encodeURIComponent(id));
-        $("btnLogout").addEventListener("click", async ()=>{
-          await sb.auth.signOut();
-          location.href="index.html";
-        });
-
-        const row = await loadArticle(id);
-        fillUI(row);
-
-        // photos (1) depuis champ article si dispo
-        let mainUrl = row.photo_principale_url || row.photo_principale || null;
-        let urls = [];
-        if (mainUrl) urls.push(mainUrl);
-
-        // photos (2) optionnel depuis table PhotosProduit si elle existe
-        const photos = await tryLoadPhotos(id);
-        if (photos.length){
-          // choisir main si is_main
-          const main = photos.find(p=>p.is_main && p.url) || photos.find(p=>p.url) || null;
-          if (!mainUrl && main?.url) mainUrl = main.url;
-
-          const list = photos.map(p=>p.url).filter(Boolean);
-          // fusion sans doublons
-          list.forEach(u=>{ if (!urls.includes(u)) urls.push(u); });
-        }
-
-        setMainPhoto(mainUrl);
-        renderThumbs(urls, mainUrl);
-
+        renderThumbs();
       }catch(err){
         console.error(err);
-        // ⚠️ on n’envoie pas à l’accueil en cas d’erreur : on affiche l’erreur
-        showError("Erreur : " + (err?.message || err));
+        alert("Impossible de charger la fiche (droits RLS, ID inexistant, ou erreur réseau).");
+        window.location.href = "articles.html";
+      }finally{
+        showLoading(false);
       }
-    })();
+    }
+
+    main();
   </script>
 </body>
 </html>
