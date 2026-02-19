@@ -20,9 +20,7 @@
   --panel:rgba(255,255,255,.06);
   --border:rgba(255,255,255,.12);
   --text:rgba(255,255,255,.92);
-  --muted:rgba(255,255,255,.65);
 }
-
 *{box-sizing:border-box}
 body{
   margin:0;
@@ -30,14 +28,12 @@ body{
   color:var(--text);
   background:var(--bg);
 }
-
 .wrap{max-width:1200px;margin:auto;padding:24px 16px}
 
 .topbar{
   display:flex;justify-content:space-between;flex-wrap:wrap;
   gap:10px;margin-bottom:10px;
 }
-
 h1{margin:0;font-size:20px;font-weight:800}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 
@@ -70,7 +66,6 @@ h1{margin:0;font-size:20px;font-weight:800}
   background:rgba(255,255,255,.05);
   flex:1 1 220px;
 }
-
 .search input{
   background:transparent;
   border:none;
@@ -90,7 +85,6 @@ h1{margin:0;font-size:20px;font-weight:800}
   font-weight:700;
   outline:none;
 }
-
 .input{min-width:110px}
 .select{min-width:140px}
 
@@ -98,7 +92,6 @@ h1{margin:0;font-size:20px;font-weight:800}
 .inputN{
   width:60px;
   text-align:center;
-  font-weight:800;
 }
 
 .select option{
@@ -119,54 +112,29 @@ h1{margin:0;font-size:20px;font-weight:800}
   border:none !important;
   font-size:12px;
 }
-
 .tabulator-row{
   background:rgba(255,255,255,.03) !important;
 }
-
 .tabulator-row:hover{
   background:rgba(124,92,255,.15) !important;
 }
-
 .tabulator-cell{
   padding:6px !important;
 }
 
-a.cellLink{
-  text-decoration:none;
-  color:inherit;
-}
-
-.statusMini{
-  width:30px;height:20px;
-  display:flex;align-items:center;justify-content:center;
-  border-radius:999px;
-  font-size:10px;font-weight:800;
-  background:rgba(255,255,255,.08);
-}
-
-.numMini{
-  font-size:10px;
-  font-weight:800;
-}
-
+/* Responsive mobile */
 @media(max-width:520px){
   .filters{
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:6px;
   }
-
   .search{grid-column:1/-1}
-
   .input,.select{
     font-size:11px;
     padding:6px 8px;
   }
-
-  .inputN{
-    width:50px;
-  }
+  .inputN{width:50px}
 }
 </style>
 </head>
@@ -223,6 +191,16 @@ function computeStatus(r){
   return "EN STOCK";
 }
 
+const qInput=document.getElementById("q");
+const statusInput=document.getElementById("status");
+const numeroInput=document.getElementById("numero");
+const tailleInput=document.getElementById("taille");
+const couleurInput=document.getElementById("couleur");
+const modeleInput=document.getElementById("modele");
+const resetBtn=document.getElementById("reset");
+const reloadBtn=document.getElementById("btnReload");
+const count=document.getElementById("count");
+
 function applyFilters(){
   const q=normL(qInput.value);
   const st=statusInput.value;
@@ -260,28 +238,26 @@ const table=new Tabulator("#table",{
 });
 
 async function load(){
-  const {data}=await sb
+  const {data,error}=await sb
     .from("ListeProduit")
     .select("id,numero,article,taille,modele,couleur,date_mise_en_ligne,date_vente")
     .order("id",{ascending:false})
     .limit(3000);
+
+  if(error){
+    console.error(error);
+    return;
+  }
 
   const rows=data.map(r=>({...r,__status:computeStatus(r)}));
   table.setData(rows);
   count.textContent=rows.length;
 }
 
-const qInput=q;
-const statusInput=status;
-const numeroInput=numero;
-const tailleInput=taille;
-const couleurInput=couleur;
-const modeleInput=modele;
-
 [qInput,statusInput,numeroInput,tailleInput,couleurInput,modeleInput]
 .forEach(e=>e.addEventListener(e===statusInput?"change":"input",applyFilters));
 
-reset.onclick=()=>{
+resetBtn.onclick=()=>{
   qInput.value="";
   statusInput.value="";
   numeroInput.value="";
@@ -291,7 +267,7 @@ reset.onclick=()=>{
   applyFilters();
 };
 
-btnReload.onclick=load;
+reloadBtn.onclick=load;
 
 load();
 </script>
