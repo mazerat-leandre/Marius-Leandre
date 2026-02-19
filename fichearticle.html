@@ -402,7 +402,7 @@
           qui,
           prix_ha,
           ca_encaisse,
-          client,
+          client_id,
           date_recept,
 
           prix_en_ligne,
@@ -486,7 +486,7 @@
       setText("v_delai_total", dTotal === null ? "—" : `${dTotal} j`);
 
       // client
-      setText("v_client", row.client);
+      setText("v_client", row.client_id);
       setText("v_date_recept", fmtDate(row.date_recept));
     }
 
