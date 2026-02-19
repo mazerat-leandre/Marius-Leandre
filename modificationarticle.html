@@ -459,7 +459,7 @@
     function calcFinancier(){
       const prix = toNumber(el("prix_ha").value);
       const ca = toNumber(el("ca_encaisse").value);
-      const marge = ca - prix;
+      const marge = (ca > 0) ? (ca - prix) : 0;
       const coef = (prix > 0 && ca > 0) ? (ca / prix) : 0;
 
       // Coef marge = Coef réalisé (calcul automatique : CA encaissé / Prix HA)
@@ -482,7 +482,7 @@
     function updateMiniStats(){
       const prix = toNumber(el("prix_ha").value);
       const ca = toNumber(el("ca_encaisse").value);
-      const marge = ca - prix;
+      const marge = (ca > 0) ? (ca - prix) : 0;
 
       const dHA = parseDateSafe(el("date_ha").value);
       const dV = parseDateSafe(el("date_vente").value);
