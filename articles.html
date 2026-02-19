@@ -13,7 +13,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Tabulator -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.0/dist/css/tabulator.min.css">
 
   <style>
@@ -112,7 +111,7 @@
       border:1px solid rgba(255,255,255,.12);
       background:rgba(255,255,255,.04);
       flex: 1 1 360px;
-      min-width: 260px;
+      min-width: 240px;
     }
     .search input{
       width:100%;
@@ -139,7 +138,7 @@
       white-space:pre-wrap;
     }
 
-    /* Tabulator compact + lisible */
+    /* Tabulator compact */
     .tabulator{
       border:none !important;
       background:transparent !important;
@@ -179,7 +178,22 @@
       font-size:12px !important;
     }
 
-    /* Badge statut + cellules cliquables */
+    /* Liens cliquables (pour fiabiliser le clic) */
+    a.cellLink{
+      color:inherit;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      width:100%;
+    }
+    a.cellLink:hover{
+      text-decoration:underline;
+      text-decoration-color: rgba(124,92,255,.65);
+      text-underline-offset: 2px;
+    }
+
+    /* Badge statut */
     .statusBadge{
       display:inline-flex;
       align-items:center;
@@ -195,14 +209,13 @@
     .status-online{background:rgba(124,92,255,.18); border-color:rgba(124,92,255,.30)}
     .status-stock{background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.16)}
 
-    .clickable{
-      cursor:pointer;
-      text-decoration: underline;
-      text-decoration-color: rgba(255,255,255,.22);
-      text-underline-offset: 2px;
-    }
-    .clickable:hover{
-      text-decoration-color: rgba(124,92,255,.65);
+    /* Pour éviter que l'article prenne tout */
+    .ellipsis{
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      max-width:100%;
+      display:inline-block;
     }
   </style>
 </head>
@@ -288,24 +301,10 @@
       return "EN STOCK";
     }
 
-    function statusBadgeFormatter(cell){
-      const v = cell.getValue();
-      let cls = "statusBadge status-stock";
-      if (v === "VENDU") cls = "statusBadge status-sold";
-      else if (v === "EN LIGNE") cls = "statusBadge status-online";
-      return `<span class="${cls}">${v}</span>`;
-    }
-
     function containsFilter(headerValue, rowValue){
       const hv = normalizeStr(headerValue);
       if (!hv) return true;
       return normalizeStr(rowValue).includes(hv);
-    }
-
-    function openFicheFromRow(rowData){
-      const id = rowData?.id;
-      if (id === undefined || id === null || id === "") return;
-      window.location.href = "fichearticle.html?id=" + encodeURIComponent(id);
     }
 
     function applyQuickSearch(){
@@ -329,7 +328,11 @@
 
       return new Tabulator("#table", {
         layout:"fitColumns",
-        responsiveLayout:"hide",
+
+        // ✅ Mobile-friendly : garde Statut + Article, le reste en "collapse"
+        responsiveLayout:"collapse",
+        responsiveLayoutCollapseStartOpen:false,
+
         height:"680px",
         placeholder:"Aucune donnée",
 
@@ -337,46 +340,66 @@
           {
             title:"Statut",
             field:"__status",
-            width:130,
+            width:125,
             headerFilter:"input",
             headerFilterFunc:containsFilter,
-            formatter:statusBadgeFormatter,
-            cellClick:(e,cell)=>openFicheFromRow(cell.getRow().getData())
+            responsive:0,
+            formatter:(cell)=>{
+              const row = cell.getRow().getData();
+              const id = row?.id;
+              const v = cell.getValue();
+              let cls = "statusBadge status-stock";
+              if (v === "VENDU") cls = "statusBadge status-sold";
+              else if (v === "EN LIGNE") cls = "statusBadge status-online";
+              const href = "fichearticle.html?id=" + encodeURIComponent(id);
+              return `<a class="cellLink" href="${href}" title="Ouvrir la fiche">
+                        <span class="${cls}">${v}</span>
+                      </a>`;
+            }
           },
           {
             title:"Article",
             field:"article",
-            minWidth:420,
-            widthGrow:6,
+            // ✅ largeur réaliste (et flexible)
+            minWidth:220,
+            widthGrow:5,
             headerFilter:"input",
             headerFilterFunc:containsFilter,
+            responsive:0,
             formatter:(cell)=>{
-              const v = cell.getValue() ?? "";
-              return `<span class="clickable">${String(v)}</span>`;
-            },
-            cellClick:(e,cell)=>openFicheFromRow(cell.getRow().getData())
+              const row = cell.getRow().getData();
+              const id = row?.id;
+              const v = (cell.getValue() ?? "").toString();
+              const href = "fichearticle.html?id=" + encodeURIComponent(id);
+              return `<a class="cellLink" href="${href}" title="Ouvrir la fiche">
+                        <span class="ellipsis">${v}</span>
+                      </a>`;
+            }
           },
           {
             title:"Taille",
             field:"taille",
             width:90,
             headerFilter:"input",
-            headerFilterFunc:containsFilter
+            headerFilterFunc:containsFilter,
+            responsive:2
           },
           {
             title:"Couleur",
             field:"couleur",
             width:120,
             headerFilter:"input",
-            headerFilterFunc:containsFilter
+            headerFilterFunc:containsFilter,
+            responsive:3
           },
           {
             title:"Modèle",
             field:"modele",
-            minWidth:160,
+            minWidth:140,
             widthGrow:2,
             headerFilter:"input",
-            headerFilterFunc:containsFilter
+            headerFilterFunc:containsFilter,
+            responsive:4
           },
         ],
       });
