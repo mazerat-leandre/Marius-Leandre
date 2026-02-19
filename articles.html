@@ -42,7 +42,7 @@
         radial-gradient(800px 500px at 60% 120%, rgba(45,212,191,.18), transparent 55%),
         var(--bg);
     }
-    .wrap{max-width:1350px;margin:0 auto;padding:28px 18px 60px}
+    .wrap{max-width:1200px;margin:0 auto;padding:28px 18px 60px}
     .topbar{
       display:flex;align-items:flex-start;justify-content:space-between;
       flex-wrap:wrap;gap:12px;margin-bottom:16px;
@@ -111,7 +111,7 @@
       border-radius:14px;
       border:1px solid rgba(255,255,255,.12);
       background:rgba(255,255,255,.04);
-      flex: 1 1 320px;
+      flex: 1 1 360px;
       min-width: 260px;
     }
     .search input{
@@ -124,42 +124,6 @@
       font-size:13px;
     }
     .search span{color:var(--muted2);font-weight:900}
-
-    .select{
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.04);
-      color:var(--text);
-      font-weight:800;
-      font-size:13px;
-      outline:none;
-    }
-
-    .toggle{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.04);
-      font-weight:900;
-      font-size:13px;
-      cursor:pointer;
-      user-select:none;
-    }
-    .toggle input{accent-color:var(--accent); cursor:pointer}
-
-    .iconBtn{
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.15);
-      border-radius:10px;
-      cursor:pointer;
-      font-size:14px;
-      padding:6px 9px;
-    }
-    .iconBtn:hover{background:rgba(124,92,255,.25)}
 
     .errorBox{
       margin-top:14px;
@@ -175,15 +139,20 @@
       white-space:pre-wrap;
     }
 
-    /* Tabulator dark harmony */
+    /* Tabulator - rendu plus compact + lisible */
     .tabulator{
       border:none !important;
       background:transparent !important;
       color:var(--text) !important;
+      font-size:12px;           /* ✅ police réduite */
     }
     .tabulator .tabulator-header{
       background:rgba(255,255,255,.04) !important;
       border-bottom:1px solid rgba(255,255,255,.10) !important;
+    }
+    .tabulator .tabulator-col-title{
+      font-weight:900 !important;
+      font-size:12px !important;
     }
     .tabulator .tabulator-row{
       background:rgba(255,255,255,.02) !important;
@@ -192,7 +161,10 @@
     .tabulator .tabulator-row:hover{
       background:rgba(124,92,255,.10) !important;
     }
-    .tabulator .tabulator-cell{border-right:1px solid rgba(255,255,255,.05) !important;}
+    .tabulator .tabulator-cell{
+      border-right:1px solid rgba(255,255,255,.05) !important;
+      padding:8px 8px !important;   /* ✅ plus compact */
+    }
     .tabulator .tabulator-footer{
       background:rgba(255,255,255,.03) !important;
       border-top:1px solid rgba(255,255,255,.10) !important;
@@ -206,12 +178,22 @@
       font-weight:800 !important;
       font-size:12px !important;
     }
-    .tabulator .tabulator-responsive-collapse{
-      background:rgba(255,255,255,.03) !important;
-      border:1px solid rgba(255,255,255,.10) !important;
-      border-radius:14px !important;
-      margin:10px !important;
+
+    /* Badge statut */
+    .statusBadge{
+      display:inline-flex;
+      align-items:center;
+      padding:4px 10px;
+      border-radius:999px;
+      font-weight:900;
+      letter-spacing:.03em;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      white-space:nowrap;
     }
+    .status-sold{background:rgba(45,212,191,.18); border-color:rgba(45,212,191,.30)}
+    .status-online{background:rgba(124,92,255,.18); border-color:rgba(124,92,255,.30)}
+    .status-stock{background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.16)}
   </style>
 </head>
 
@@ -233,26 +215,14 @@
     <div class="panel">
       <div class="panelHeader">
         <div class="h">Tableau</div>
+
         <div class="toolbar">
           <div class="search">
             <span>🔎</span>
-            <input id="quickSearch" placeholder="Recherche rapide : article, modèle, couleur, taille, numéro…">
+            <input id="quickSearch" placeholder="Recherche rapide : article, modèle, couleur, taille…">
           </div>
 
-          <select class="select" id="statusFilter">
-            <option value="ALL">Statut : Tous</option>
-            <option value="STOCK">Stock</option>
-            <option value="ONLINE">En ligne</option>
-            <option value="SOLD">Vendu</option>
-          </select>
-
-          <label class="toggle" title="Afficher uniquement les articles rentables (marge > 0)">
-            <input type="checkbox" id="marginPositive">
-            Marge &gt; 0
-          </label>
-
-          <button class="btn" id="btnReset">Reset filtres</button>
-
+          <button class="btn" id="btnReset">Reset</button>
           <div class="chip" id="countChip">0</div>
         </div>
       </div>
@@ -296,254 +266,144 @@
       return data.session;
     }
 
-    function toNumber(v){
-      const n = Number(v);
-      return Number.isFinite(n) ? n : 0;
-    }
-
     function normalizeStr(v){
       return (v ?? "").toString().toLowerCase().trim();
     }
 
-    // Colonne "Statut" calculée (non affichée sur mobile en priorité)
     function computeStatus(row){
-      // vendu si date_vente existe
-      // en ligne si date_mise_en_ligne existe
-      // sinon stock
       const dV = row?.date_vente;
       const dM = row?.date_mise_en_ligne;
       if (dV) return "VENDU";
       if (dM) return "EN LIGNE";
-      return "STOCK";
+      return "EN STOCK";
     }
 
-    function computeMarge(row){
-      const ca = toNumber(row?.ca_encaisse);
-      const prix = toNumber(row?.prix_ha);
-      return ca - prix;
+    function statusBadgeFormatter(cell){
+      const v = cell.getValue();
+      let cls = "statusBadge status-stock";
+      if (v === "VENDU") cls = "statusBadge status-sold";
+      else if (v === "EN LIGNE") cls = "statusBadge status-online";
+      return `<span class="${cls}">${v}</span>`;
     }
 
-    // Custom header filter comparison (contains, case-insensitive)
     function containsFilter(headerValue, rowValue){
       const hv = normalizeStr(headerValue);
       if (!hv) return true;
       return normalizeStr(rowValue).includes(hv);
     }
 
-    // Custom filters driven by toolbar
-    function applyToolbarFilters(){
+    function applyQuickSearch(){
       if (!window.__table) return;
-
       const q = normalizeStr(el("quickSearch").value);
-      const status = el("statusFilter").value;
-      const onlyPositive = el("marginPositive").checked;
 
-      // Clear any previous custom filters (but keep header filters)
-      window.__table.clearFilter(true); // true => keeps header filters
+      window.__table.clearFilter(true); // keep header filters
 
-      // Apply quick search + status + marge>0 using a single function filter
+      if (!q) return;
+
       window.__table.addFilter((data) => {
-        // Quick search over prioritized fields
-        if (q){
-          const hay = [
-            data.numero, data.article, data.taille, data.couleur, data.modele,
-            data.qui, data.client_id
-          ].map(normalizeStr).join(" | ");
-          if (!hay.includes(q)) return false;
-        }
-
-        // Status filter
-        const st = computeStatus(data);
-        if (status === "SOLD" && st !== "VENDU") return false;
-        if (status === "ONLINE" && st !== "EN LIGNE") return false;
-        if (status === "STOCK" && st !== "STOCK") return false;
-
-        // Margin positive
-        if (onlyPositive){
-          const m = computeMarge(data);
-          if (!(m > 0)) return false;
-        }
-
-        return true;
+        const hay = [
+          data.article, data.taille, data.couleur, data.modele, data.__status
+        ].map(normalizeStr).join(" | ");
+        return hay.includes(q);
       });
     }
 
-    function buildTable(){
-      if (!window.Tabulator) throw new Error("Tabulator non chargé (CDN bloqué).");
+  function buildTable(){
+  if (!window.Tabulator) throw new Error("Tabulator non chargé (CDN bloqué).");
 
-      return new Tabulator("#table", {
-        layout:"fitColumns",
-        responsiveLayout:"collapse",
-        responsiveLayoutCollapseStartOpen:false,
+  return new Tabulator("#table", {
+    layout:"fitColumns",
+    responsiveLayout:"hide",
+    height:"680px",
+    placeholder:"Aucune donnée",
 
-        pagination:"local",
-        paginationSize:20,
+    // ✅ Double-clic sur ligne => ouvrir la fiche
+    rowDblClick: function (e, row) {
+      const data = row.getData();
+      const id = data?.id;
+      if (id === undefined || id === null || id === "") return;
+      window.location.href = "fichearticle.html?id=" + encodeURIComponent(id);
+    },
 
-        height:"680px",
-        placeholder:"Aucune donnée",
-
-        columns:[
-          // Priorités max (toujours visibles)
-          {
-            title:"",
-            width:52,
-            hozAlign:"center",
-            headerSort:false,
-            formatter:() => "<button class='iconBtn' title='Voir'>👁</button>",
-            cellClick:(e,cell)=>{
-              const row = cell.getRow().getData();
-              const id = row?.id;
-              if (id === undefined || id === null || id === "") {
-                alert("ID manquant sur cette ligne.");
-                return;
-              }
-              window.location.href = "fichearticle.html?id=" + encodeURIComponent(id);
-            },
-            responsive:0
-          },
-          {
-            title:"",
-            width:52,
-            hozAlign:"center",
-            headerSort:false,
-            formatter:() => "<button class='iconBtn' title='Modifier'>✏</button>",
-            cellClick:(e,cell)=>{
-              const row = cell.getRow().getData();
-              const id = row?.id;
-              if (id === undefined || id === null || id === "") {
-                alert("ID manquant sur cette ligne.");
-                return;
-              }
-              window.location.href = "modificationarticle.html?id=" + encodeURIComponent(id);
-            },
-            responsive:0
-          },
-
-          // Colonnes prioritaires demandées
-          {
-            title:"Article",
-            field:"article",
-            headerFilter:"input",
-            headerFilterFunc:containsFilter,
-            responsive:1
-          },
-          {
-            title:"Taille",
-            field:"taille",
-            headerFilter:"input",
-            headerFilterFunc:containsFilter,
-            responsive:2
-          },
-          {
-            title:"Couleur",
-            field:"couleur",
-            headerFilter:"input",
-            headerFilterFunc:containsFilter,
-            responsive:3
-          },
-          {
-            title:"Modèle",
-            field:"modele",
-            headerFilter:"input",
-            headerFilterFunc:containsFilter,
-            responsive:4
-          },
-
-          // Statut & marge (utile en desktop, collapse en mobile)
-          {
-            title:"Statut",
-            field:"__status",
-            sorter:"string",
-            headerFilter:"input",
-            headerFilterFunc:containsFilter,
-            responsive:7
-          },
-          {
-            title:"Marge",
-            field:"__marge",
-            sorter:"number",
-            hozAlign:"right",
-            formatter:(cell)=>{
-              const v = toNumber(cell.getValue());
-              const sign = v > 0 ? "+" : "";
-              return sign + v.toFixed(2);
-            },
-            responsive:8
-          },
-
-          // Autres colonnes (faible priorité)
-          {title:"Numéro", field:"numero", headerFilter:"input", headerFilterFunc:containsFilter, responsive:9},
-          {title:"Date HA", field:"date_ha", headerFilter:"input", headerFilterFunc:containsFilter, responsive:10},
-          {title:"Date mise en ligne", field:"date_mise_en_ligne", headerFilter:"input", headerFilterFunc:containsFilter, responsive:11},
-          {title:"Date vente", field:"date_vente", headerFilter:"input", headerFilterFunc:containsFilter, responsive:12},
-          {title:"Prix HA", field:"prix_ha", headerFilter:"input", headerFilterFunc:containsFilter, responsive:13},
-          {title:"CA encaissé", field:"ca_encaisse", headerFilter:"input", headerFilterFunc:containsFilter, responsive:14},
-          {title:"Qui", field:"qui", headerFilter:"input", headerFilterFunc:containsFilter, responsive:15},
-          {title:"Client", field:"client_id", headerFilter:"input", headerFilterFunc:containsFilter, responsive:16},
-        ],
-      });
-    }
+    columns:[
+      {
+        title:"Statut",
+        field:"__status",
+        width:130,
+        headerFilter:"input",
+        headerFilterFunc:containsFilter,
+        formatter:statusBadgeFormatter
+      },
+      {
+        title:"Article",
+        field:"article",
+        minWidth:420,
+        widthGrow:6,
+        headerFilter:"input",
+        headerFilterFunc:containsFilter
+      },
+      {
+        title:"Taille",
+        field:"taille",
+        width:90,
+        headerFilter:"input",
+        headerFilterFunc:containsFilter
+      },
+      {
+        title:"Couleur",
+        field:"couleur",
+        width:120,
+        headerFilter:"input",
+        headerFilterFunc:containsFilter
+      },
+      {
+        title:"Modèle",
+        field:"modele",
+        minWidth:160,
+        widthGrow:2,
+        headerFilter:"input",
+        headerFilterFunc:containsFilter
+      },
+    ],
+  });
+}
 
     async function loadData(table){
       clearError();
 
-      // Select minimal fields
       const {data, error} = await sb
         .from("ListeProduit")
-        .select("id, numero, article, taille, modele, couleur, date_ha, date_mise_en_ligne, date_vente, prix_ha, ca_encaisse, qui, client_id")
+        .select("id, article, taille, modele, couleur, date_mise_en_ligne, date_vente")
         .order("id", {ascending:false})
-        .limit(2000);
+        .limit(3000);
 
       if (error) throw error;
 
-      const rows = (data || []).map(r => {
-        const status = computeStatus(r);
-        const marge = computeMarge(r);
-        return { ...r, __status: status, __marge: marge };
-      });
+      const rows = (data || []).map(r => ({ ...r, __status: computeStatus(r) }));
 
       table.setData(rows);
       el("countChip").textContent = String(rows.length);
 
-      // Apply toolbar filters after load
-      applyToolbarFilters();
+      applyQuickSearch();
     }
 
-    // Buttons & toolbar events
+    // Actions
     el("btnHome").addEventListener("click", ()=>window.location.href="index.html");
     el("btnAdd").addEventListener("click", ()=>window.location.href="admin.html");
     el("btnReload").addEventListener("click", async ()=>{
-      try{
-        clearError();
-        await loadData(window.__table);
-      }catch(err){
-        console.error(err);
-        showError("Erreur rechargement : " + (err?.message || err));
-      }
+      try{ await loadData(window.__table); } catch(err){ console.error(err); showError(err?.message || err); }
     });
     el("btnLogout").addEventListener("click", async ()=>{
       await sb.auth.signOut();
       window.location.href="index.html";
     });
 
-    el("quickSearch").addEventListener("input", () => applyToolbarFilters());
-    el("statusFilter").addEventListener("change", () => applyToolbarFilters());
-    el("marginPositive").addEventListener("change", () => applyToolbarFilters());
-
+    el("quickSearch").addEventListener("input", ()=>applyQuickSearch());
     el("btnReset").addEventListener("click", ()=>{
-      // reset toolbar
       el("quickSearch").value = "";
-      el("statusFilter").value = "ALL";
-      el("marginPositive").checked = false;
-
-      // reset header filters
       window.__table.clearHeaderFilter();
-
-      // reset custom filters
       window.__table.clearFilter(true);
-
-      // re-apply (none)
-      applyToolbarFilters();
+      applyQuickSearch();
     });
 
     (async function main(){
@@ -553,7 +413,7 @@
         await loadData(window.__table);
       }catch(err){
         console.error(err);
-        showError("Erreur chargement : " + (err?.message || err));
+        showError("Erreur : " + (err?.message || err));
       }
     })();
   </script>
