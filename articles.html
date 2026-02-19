@@ -1,505 +1,299 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Articles</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Articles</title>
 
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.0/dist/css/tabulator.min.css">
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.0/dist/css/tabulator.min.css">
+<style>
+:root{
+  --bg:#0b1220;
+  --panel:rgba(255,255,255,.06);
+  --border:rgba(255,255,255,.12);
+  --text:rgba(255,255,255,.92);
+  --muted:rgba(255,255,255,.65);
+}
 
-  <style>
-    :root{
-      --bg:#0b1220;
-      --panel:rgba(255,255,255,.06);
-      --border:rgba(255,255,255,.12);
-      --text:rgba(255,255,255,.92);
-      --muted:rgba(255,255,255,.65);
-      --muted2:rgba(255,255,255,.52);
-      --accent:#7c5cff;
-      --danger:#ff4d6d;
-      --shadow:0 18px 60px rgba(0,0,0,.45);
-      --radius:18px;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      color:var(--text);
-      min-height:100vh;
-      background:
-        radial-gradient(1200px 600px at 10% -10%, rgba(124,92,255,.35), transparent 55%),
-        radial-gradient(900px 500px at 95% 0%, rgba(33,212,253,.22), transparent 55%),
-        radial-gradient(800px 500px at 60% 120%, rgba(45,212,191,.18), transparent 55%),
-        var(--bg);
-    }
-    .wrap{max-width:1200px;margin:0 auto;padding:28px 18px 60px}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,system-ui,-apple-system;
+  color:var(--text);
+  background:var(--bg);
+}
 
-    .topbar{
-      display:flex;align-items:flex-start;justify-content:space-between;
-      flex-wrap:wrap;gap:12px;margin-bottom:10px;
-    }
-    h1{margin:0;font-size:22px;font-weight:900;letter-spacing:.2px}
-    .subtitle{color:var(--muted);font-size:13px;margin-top:6px}
-    .actions{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}
-    .btn{
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.06);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:12px;
-      font-weight:800;
-      font-size:13px;
-      cursor:pointer;
-    }
-    .btn:hover{background:rgba(124,92,255,.22)}
-    .btn.primary{
-      border-color:rgba(124,92,255,.45);
-      background:linear-gradient(135deg, rgba(124,92,255,.35), rgba(33,212,253,.14));
-    }
-    .btn.danger{
-      border-color:rgba(255,77,109,.45);
-      background:rgba(255,77,109,.12);
-    }
+.wrap{max-width:1200px;margin:auto;padding:24px 16px}
 
-    /* Filtres sous le titre */
-    .filters{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      margin: 10px 0 16px 0;
-    }
+.topbar{
+  display:flex;justify-content:space-between;flex-wrap:wrap;
+  gap:10px;margin-bottom:10px;
+}
 
-    .search{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.04);
-      flex: 1 1 260px;
-      min-width: 200px;
-    }
-    .search input{
-      width:100%;
-      border:none;
-      outline:none;
-      background:transparent;
-      color:var(--text);
-      font-weight:800;
-      font-size:13px;
-    }
-    .search span{color:var(--muted2);font-weight:900}
+h1{margin:0;font-size:20px;font-weight:800}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
 
-    .input{
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.04);
-      color:var(--text);
-      font-weight:800;
-      font-size:13px;
-      outline:none;
-      min-width: 140px;
-    }
+.btn{
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.05);
+  color:white;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+}
 
-    .select{
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.06);
-      color:var(--text);
-      font-weight:900;
-      font-size:13px;
-      outline:none;
-      min-width: 160px;
-    }
-    /* ✅ lisibilité des options */
-    .select option{
-      background:#0b1220;
-      color:#ffffff;
-    }
+.filters{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+  align-items:center;
+}
 
-    .chip{
-      font-size:12px; padding:6px 10px; border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.05);
-      color:var(--muted);
-      font-weight:900;
-    }
+.search{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.05);
+  flex:1 1 220px;
+}
 
-    .panel{
-      background:rgba(255,255,255,.06);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      box-shadow:0 18px 60px rgba(0,0,0,.45);
-      overflow:hidden;
-      backdrop-filter: blur(12px);
-    }
-    .panelBody{padding:14px}
+.search input{
+  background:transparent;
+  border:none;
+  outline:none;
+  color:white;
+  font-size:12px;
+  width:100%;
+}
 
-    .errorBox{
-      margin-top:14px;
-      padding:12px 14px;
-      border-radius:14px;
-      border:1px solid rgba(255,77,109,.35);
-      background:rgba(255,77,109,.10);
-      color:rgba(255,255,255,.92);
-      display:none;
-      font-weight:900;
-      font-size:13px;
-      line-height:1.4;
-      white-space:pre-wrap;
-    }
+.input,.select{
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.05);
+  color:white;
+  font-size:12px;
+  font-weight:700;
+  outline:none;
+}
 
-    /* Tabulator compact */
-    .tabulator{
-      border:none !important;
-      background:transparent !important;
-      color:var(--text) !important;
-      font-size:12px;
-    }
-    .tabulator .tabulator-header{
-      background:rgba(255,255,255,.04) !important;
-      border-bottom:1px solid rgba(255,255,255,.10) !important;
-    }
-    .tabulator .tabulator-col-title{
-      font-weight:900 !important;
-      font-size:12px !important;
-    }
-    .tabulator .tabulator-row{
-      background:rgba(255,255,255,.02) !important;
-      border-bottom:1px solid rgba(255,255,255,.06) !important;
-    }
-    .tabulator .tabulator-row:hover{ background:rgba(124,92,255,.10) !important; }
-    .tabulator .tabulator-cell{
-      border-right:1px solid rgba(255,255,255,.05) !important;
-      padding:8px 8px !important;
-    }
+.input{min-width:110px}
+.select{min-width:140px}
 
-    a.cellLink{
-      color:inherit;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      width:100%;
-    }
-    a.cellLink:hover{
-      text-decoration:underline;
-      text-decoration-color: rgba(124,92,255,.65);
-      text-underline-offset: 2px;
-    }
+/* champ N ultra compact */
+.inputN{
+  width:60px;
+  text-align:center;
+  font-weight:800;
+}
 
-    /* Statut mini */
-    .statusMini{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      width:34px;
-      height:22px;
-      border-radius:999px;
-      font-weight:900;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.06);
-      font-size:11px;
-      line-height:1;
-      flex:0 0 auto;
-    }
-    .s-sold{background:rgba(45,212,191,.18); border-color:rgba(45,212,191,.30)}
-    .s-online{background:rgba(124,92,255,.18); border-color:rgba(124,92,255,.30)}
-    .s-stock{background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.16)}
+.select option{
+  background:#0b1220;
+  color:white;
+}
 
-    /* Numéro ultra compact */
-    .numMini{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-width:28px;
-      height:22px;
-      padding:0 6px;
-      border-radius:10px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.06);
-      font-weight:900;
-      font-size:11px;
-      line-height:1;
-    }
+.chip{
+  font-size:11px;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.05);
+}
 
-    .ellipsis{
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-      max-width:100%;
-      display:inline-block;
-    }
+.tabulator{
+  background:transparent !important;
+  border:none !important;
+  font-size:12px;
+}
 
-    /* ✅ MOBILE : filtres compacts et sur 2 colonnes */
-    @media (max-width: 520px){
-      .wrap{padding:18px 12px 50px}
+.tabulator-row{
+  background:rgba(255,255,255,.03) !important;
+}
 
-      .filters{
-        display:grid;
-        grid-template-columns: 1fr 1fr;
-        gap:8px;
-        align-items:stretch;
-      }
-      .search{
-        grid-column: 1 / -1;
-        padding:8px 10px;
-        border-radius:12px;
-        min-width: 0;
-      }
-      .search input{font-size:12px}
+.tabulator-row:hover{
+  background:rgba(124,92,255,.15) !important;
+}
 
-      .select, .input{
-        min-width: 0;
-        width:100%;
-        padding:8px 10px;
-        border-radius:12px;
-        font-size:12px;
-      }
+.tabulator-cell{
+  padding:6px !important;
+}
 
-      .btn{
-        padding:8px 10px;
-        border-radius:12px;
-        font-size:12px;
-      }
+a.cellLink{
+  text-decoration:none;
+  color:inherit;
+}
 
-      #reset{grid-column: 1 / 2;}
-      #count{grid-column: 2 / 3; justify-self:end;}
-    }
-  </style>
+.statusMini{
+  width:30px;height:20px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:999px;
+  font-size:10px;font-weight:800;
+  background:rgba(255,255,255,.08);
+}
+
+.numMini{
+  font-size:10px;
+  font-weight:800;
+}
+
+@media(max-width:520px){
+  .filters{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:6px;
+  }
+
+  .search{grid-column:1/-1}
+
+  .input,.select{
+    font-size:11px;
+    padding:6px 8px;
+  }
+
+  .inputN{
+    width:50px;
+  }
+}
+</style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <div>
-        <h1>Liste des articles</h1>
-        <div class="subtitle" id="sub">—</div>
-      </div>
-      <div class="actions">
-        <button class="btn" id="btnHome">Accueil</button>
-        <button class="btn primary" id="btnAdd">Ajouter</button>
-        <button class="btn" id="btnReload">Recharger</button>
-        <button class="btn danger" id="btnLogout">Déconnexion</button>
-      </div>
-    </div>
+<div class="wrap">
 
-    <div class="filters">
-      <div class="search">
-        <span>🔎</span>
-        <input id="q" placeholder="Recherche (article)">
-      </div>
+<div class="topbar">
+  <h1>Liste des articles</h1>
+  <div class="actions">
+    <button class="btn" id="btnReload">Recharger</button>
+  </div>
+</div>
 
-      <select class="select" id="status">
-        <option value="">Statut : Tous</option>
-        <option value="EN STOCK">En stock</option>
-        <option value="EN LIGNE">En ligne</option>
-        <option value="VENDU">Vendu</option>
-      </select>
-
-      <input class="input" id="taille" placeholder="Taille">
-      <input class="input" id="couleur" placeholder="Couleur">
-      <input class="input" id="modele" placeholder="Modèle">
-
-      <button class="btn" id="reset">Reset</button>
-      <div class="chip" id="count">0</div>
-    </div>
-
-    <div class="panel">
-      <div class="panelBody">
-        <div style="overflow-x:auto;">
-          <div id="table"></div>
-        </div>
-        <div class="errorBox" id="err"></div>
-      </div>
-    </div>
+<div class="filters">
+  <div class="search">
+    🔎
+    <input id="q" placeholder="Recherche article">
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
+  <input class="input inputN" id="numero" placeholder="N">
 
-  <script>
-    const supabaseUrl="https://ghgmifhqgqiqignowred.supabase.co";
-    const supabaseKey="sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
-    const sb=window.supabase.createClient(supabaseUrl,supabaseKey);
+  <select class="select" id="status">
+    <option value="">Statut</option>
+    <option value="EN STOCK">Stock</option>
+    <option value="EN LIGNE">Ligne</option>
+    <option value="VENDU">Vendu</option>
+  </select>
 
-    const el = (id)=>document.getElementById(id);
-    function showError(msg){ el("err").style.display="block"; el("err").textContent=msg; }
-    function clearError(){ el("err").style.display="none"; el("err").textContent=""; }
+  <input class="input" id="taille" placeholder="Taille">
+  <input class="input" id="couleur" placeholder="Couleur">
+  <input class="input" id="modele" placeholder="Modèle">
 
-    async function requireSession(){
-      const {data, error} = await sb.auth.getSession();
-      if (error) throw error;
-      if (!data.session){ location.href="index.html"; return null; }
-      el("sub").textContent = "Connecté : " + (data.session.user?.email || "—");
-      return data.session;
-    }
+  <button class="btn" id="reset">Reset</button>
+  <div class="chip" id="count">0</div>
+</div>
 
-    function norm(v){ return (v ?? "").toString().trim(); }
-    function normL(v){ return norm(v).toLowerCase(); }
+<div id="table"></div>
 
-    function computeStatus(row){
-      if (row?.date_vente) return "VENDU";
-      if (row?.date_mise_en_ligne) return "EN LIGNE";
-      return "EN STOCK";
-    }
-    function statusShort(full){
-      if (full === "VENDU") return "V";
-      if (full === "EN LIGNE") return "L";
-      return "S";
-    }
-    function statusClass(full){
-      if (full === "VENDU") return "statusMini s-sold";
-      if (full === "EN LIGNE") return "statusMini s-online";
-      return "statusMini s-stock";
-    }
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
 
-    function applyFilters(){
-      if (!window.__table) return;
+<script>
+const supabaseUrl="https://ghgmifhqgqiqignowred.supabase.co";
+const supabaseKey="sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
+const sb=window.supabase.createClient(supabaseUrl,supabaseKey);
 
-      const q = normL(el("q").value);
-      const st = norm(el("status").value);
-      const t = normL(el("taille").value);
-      const c = normL(el("couleur").value);
-      const m = normL(el("modele").value);
+function norm(v){return (v??"").toString().trim()}
+function normL(v){return norm(v).toLowerCase()}
 
-      window.__table.clearFilter();
+function computeStatus(r){
+  if(r?.date_vente) return "VENDU";
+  if(r?.date_mise_en_ligne) return "EN LIGNE";
+  return "EN STOCK";
+}
 
-      window.__table.addFilter((d)=>{
-        if (q && !normL(d.article).includes(q)) return false;
-        if (st && d.__status !== st) return false;
-        if (t && !normL(d.taille).includes(t)) return false;
-        if (c && !normL(d.couleur).includes(c)) return false;
-        if (m && !normL(d.modele).includes(m)) return false;
-        return true;
-      });
+function applyFilters(){
+  const q=normL(qInput.value);
+  const st=statusInput.value;
+  const n=norm(numeroInput.value);
+  const t=normL(tailleInput.value);
+  const c=normL(couleurInput.value);
+  const m=normL(modeleInput.value);
 
-      el("count").textContent = String(window.__table.getDataCount("active"));
-    }
+  table.clearFilter();
 
-    function buildTable(){
-      return new Tabulator("#table", {
-        layout:"fitColumns",
-        responsiveLayout:"collapse",
-        responsiveLayoutCollapseStartOpen:false,
-        height:"680px",
-        placeholder:"Aucune donnée",
+  table.addFilter(d=>{
+    if(q && !normL(d.article).includes(q)) return false;
+    if(st && d.__status!==st) return false;
+    if(n && !norm(d.numero).includes(n)) return false;
+    if(t && !normL(d.taille).includes(t)) return false;
+    if(c && !normL(d.couleur).includes(c)) return false;
+    if(m && !normL(d.modele).includes(m)) return false;
+    return true;
+  });
 
-        columns:[
-          {
-            title:"St",
-            field:"__status",
-            width:64,
-            headerSort:false,
-            responsive:0,
-            formatter:(cell)=>{
-              const row = cell.getRow().getData();
-              const id = row?.id;
-              const full = cell.getValue();
-              const href = "fichearticle.html?id=" + encodeURIComponent(id);
-              return `<a class="cellLink" href="${href}" title="${full}">
-                        <span class="${statusClass(full)}">${statusShort(full)}</span>
-                      </a>`;
-            }
-          },
-          {
-            title:"N",
-            field:"numero",
-            width:44,                 // ✅ adapté 3 caractères
-            hozAlign:"center",
-            headerSort:false,
-            responsive:0,
-            formatter:(cell)=>{
-              const row = cell.getRow().getData();
-              const id = row?.id;
-              const v = (cell.getValue() ?? "").toString().slice(0,3);
-              const href = "fichearticle.html?id=" + encodeURIComponent(id);
-              return `<a class="cellLink" href="${href}" title="Ouvrir la fiche">
-                        <span class="numMini">${v}</span>
-                      </a>`;
-            }
-          },
-          {
-            title:"Article",
-            field:"article",
-            minWidth:180,
-            widthGrow:6,
-            responsive:0,
-            formatter:(cell)=>{
-              const row = cell.getRow().getData();
-              const id = row?.id;
-              const v = (cell.getValue() ?? "").toString();
-              const href = "fichearticle.html?id=" + encodeURIComponent(id);
-              return `<a class="cellLink" href="${href}" title="Ouvrir la fiche">
-                        <span class="ellipsis">${v}</span>
-                      </a>`;
-            }
-          },
-          { title:"T", field:"taille", width:70, responsive:2 },
-          { title:"Coul.", field:"couleur", width:95, responsive:3 },
-          { title:"Mod.", field:"modele", minWidth:120, widthGrow:2, responsive:4 },
-        ],
-      });
-    }
+  count.textContent=table.getDataCount("active");
+}
 
-    async function loadData(){
-      clearError();
-      const {data, error} = await sb
-        .from("ListeProduit")
-        .select("id, numero, article, taille, modele, couleur, date_mise_en_ligne, date_vente")
-        .order("id", {ascending:false})
-        .limit(3000);
+const table=new Tabulator("#table",{
+  layout:"fitColumns",
+  responsiveLayout:"collapse",
+  columns:[
+    {title:"St",field:"__status",width:50,formatter:c=>c.getValue()[0]},
+    {title:"N",field:"numero",width:44,hozAlign:"center"},
+    {title:"Article",field:"article",widthGrow:4},
+    {title:"T",field:"taille",width:60},
+    {title:"C",field:"couleur",width:80},
+    {title:"M",field:"modele",widthGrow:2}
+  ]
+});
 
-      if (error) throw error;
+async function load(){
+  const {data}=await sb
+    .from("ListeProduit")
+    .select("id,numero,article,taille,modele,couleur,date_mise_en_ligne,date_vente")
+    .order("id",{ascending:false})
+    .limit(3000);
 
-      const rows = (data || []).map(r => ({ ...r, __status: computeStatus(r) }));
+  const rows=data.map(r=>({...r,__status:computeStatus(r)}));
+  table.setData(rows);
+  count.textContent=rows.length;
+}
 
-      window.__table.setData(rows);
-      el("count").textContent = String(rows.length);
-      applyFilters();
-    }
+const qInput=q;
+const statusInput=status;
+const numeroInput=numero;
+const tailleInput=taille;
+const couleurInput=couleur;
+const modeleInput=modele;
 
-    // Boutons haut
-    el("btnHome").addEventListener("click", ()=>location.href="index.html");
-    el("btnAdd").addEventListener("click", ()=>location.href="admin.html");
-    el("btnReload").addEventListener("click", ()=>loadData().catch(e=>showError(e.message || e)));
-    el("btnLogout").addEventListener("click", async ()=>{ await sb.auth.signOut(); location.href="index.html"; });
+[qInput,statusInput,numeroInput,tailleInput,couleurInput,modeleInput]
+.forEach(e=>e.addEventListener(e===statusInput?"change":"input",applyFilters));
 
-    // Events filtres
-    ["q","status","taille","couleur","modele"].forEach(id=>{
-      el(id).addEventListener(id==="status" ? "change" : "input", applyFilters);
-    });
+reset.onclick=()=>{
+  qInput.value="";
+  statusInput.value="";
+  numeroInput.value="";
+  tailleInput.value="";
+  couleurInput.value="";
+  modeleInput.value="";
+  applyFilters();
+};
 
-    el("reset").addEventListener("click", ()=>{
-      el("q").value="";
-      el("status").value="";
-      el("taille").value="";
-      el("couleur").value="";
-      el("modele").value="";
-      applyFilters();
-    });
+btnReload.onclick=load;
 
-    (async function main(){
-      try{
-        await requireSession();
-        window.__table = buildTable();
-        await loadData();
-      }catch(err){
-        console.error(err);
-        showError("Erreur : " + (err?.message || err));
-      }
-    })();
-  </script>
+load();
+</script>
 </body>
 </html>
