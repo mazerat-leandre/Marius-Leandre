@@ -1099,10 +1099,9 @@ async function deleteArticle(){
     el("saveBtn").addEventListener("click", save);
     el("toggleModeBtn").addEventListener("click", () => {
       if (mode === "view") setMode("edit");
-
-    el("duplicateBtn").addEventListener("click", duplicateArticle);
       else if (recordId) setMode("view");
     });
+    el("duplicateBtn").addEventListener("click", duplicateArticle);
     el("backBtn").addEventListener("click", () => {
       if (hasChanges){
         if (!confirm("Des modifications ne sont pas enregistrées. Quitter quand même ?")) return;
