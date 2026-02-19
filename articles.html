@@ -138,10 +138,10 @@
     }
 
     .panel{
-      background:var(--panel);
+      background:rgba(255,255,255,.06);
       border:1px solid var(--border);
       border-radius:var(--radius);
-      box-shadow:var(--shadow);
+      box-shadow:0 18px 60px rgba(0,0,0,.45);
       overflow:hidden;
       backdrop-filter: blur(12px);
     }
@@ -218,6 +218,22 @@
     .s-online{background:rgba(124,92,255,.18); border-color:rgba(124,92,255,.30)}
     .s-stock{background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.16)}
 
+    /* Numéro ultra compact */
+    .numMini{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:28px;
+      height:22px;
+      padding:0 6px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      font-weight:900;
+      font-size:11px;
+      line-height:1;
+    }
+
     .ellipsis{
       overflow:hidden;
       text-overflow:ellipsis;
@@ -236,8 +252,6 @@
         gap:8px;
         align-items:stretch;
       }
-
-      /* la recherche prend toute la largeur */
       .search{
         grid-column: 1 / -1;
         padding:8px 10px;
@@ -260,7 +274,6 @@
         font-size:12px;
       }
 
-      /* Reset + compteur sur la même ligne */
       #reset{grid-column: 1 / 2;}
       #count{grid-column: 2 / 3; justify-self:end;}
     }
@@ -401,9 +414,26 @@
             }
           },
           {
+            title:"N",
+            field:"numero",
+            width:44,                 // ✅ adapté 3 caractères
+            hozAlign:"center",
+            headerSort:false,
+            responsive:0,
+            formatter:(cell)=>{
+              const row = cell.getRow().getData();
+              const id = row?.id;
+              const v = (cell.getValue() ?? "").toString().slice(0,3);
+              const href = "fichearticle.html?id=" + encodeURIComponent(id);
+              return `<a class="cellLink" href="${href}" title="Ouvrir la fiche">
+                        <span class="numMini">${v}</span>
+                      </a>`;
+            }
+          },
+          {
             title:"Article",
             field:"article",
-            minWidth:200,
+            minWidth:180,
             widthGrow:6,
             responsive:0,
             formatter:(cell)=>{
@@ -427,7 +457,7 @@
       clearError();
       const {data, error} = await sb
         .from("ListeProduit")
-        .select("id, article, taille, modele, couleur, date_mise_en_ligne, date_vente")
+        .select("id, numero, article, taille, modele, couleur, date_mise_en_ligne, date_vente")
         .order("id", {ascending:false})
         .limit(3000);
 
