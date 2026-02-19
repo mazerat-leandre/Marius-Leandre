@@ -113,13 +113,13 @@ h1{margin:0;font-size:20px;font-weight:800}
 }
 
 .status-stock{
-  background:rgba(255,255,255,.15);
+  background:rgba(255,255,255,.20);
 }
 .status-online{
-  background:rgba(124,92,255,.6);
+  background:rgba(124,92,255,.70);
 }
 .status-sold{
-  background:rgba(45,212,191,.6);
+  background:rgba(45,212,191,.70);
 }
 
 /* ===== TABLE ===== */
@@ -219,6 +219,12 @@ function statusClass(status){
   return "statusBadge status-stock";
 }
 
+function statusLetter(status){
+  if(status==="VENDU") return "V";
+  if(status==="EN LIGNE") return "L";
+  return "S";
+}
+
 const qInput=document.getElementById("q");
 const statusInput=document.getElementById("status");
 const numeroInput=document.getElementById("numero");
@@ -269,7 +275,7 @@ const table=new Tabulator("#table",{
       width:60,
       formatter:function(cell){
         const status=cell.getValue();
-        return `<span class="${statusClass(status)}">${status[0]}</span>`;
+        return `<span class="${statusClass(status)}">${statusLetter(status)}</span>`;
       }
     },
     {title:"N",field:"numero",width:44,hozAlign:"center"},
@@ -279,7 +285,10 @@ const table=new Tabulator("#table",{
       widthGrow:4,
       formatter:function(cell){
         const row=cell.getRow().getData();
-        return `<a href="fichearticle.html?id=${row.id}" style="color:white;text-decoration:none;">${cell.getValue()}</a>`;
+        return `<a href="fichearticle.html?id=${row.id}" 
+                 style="color:#e5e7eb;text-decoration:none;font-weight:600;">
+                 ${cell.getValue()}
+                </a>`;
       }
     },
     {title:"T",field:"taille",width:60},
