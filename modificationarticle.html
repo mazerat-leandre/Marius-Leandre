@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Modification article</title>
 
-  <!-- (Optionnel mais recommandé contre le cache HTML) -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -127,7 +126,6 @@
       font-weight:800;
     }
 
-    /* Gallery */
     .gallery{padding:14px}
     .hero{
       position:relative;
@@ -163,7 +161,6 @@
     }
     .thumb img{width:100%; height:100%; object-fit:cover; display:block}
 
-    /* Buttons overlay on thumbs */
     .thumb .del, .thumb .main{
       position:absolute;
       top:6px;
@@ -215,7 +212,6 @@
     }
     .uploadBox input[type=file]{color:var(--muted);}
 
-    /* Cards */
     .cards{padding:14px; display:grid; gap:14px}
     .card{
       padding: 14px 16px 16px;
@@ -355,11 +351,14 @@
             <div class="kv">
               <div class="field"><div class="k">Prix HA</div><input type="number" step="0.01" id="prix_ha"></div>
               <div class="field"><div class="k">CA encaissé</div><input type="number" step="0.01" id="ca_encaisse"></div>
+
               <div class="field"><div class="k">Prix en ligne</div><input type="number" step="0.01" id="prix_en_ligne"></div>
               <div class="field"><div class="k">Coef en ligne</div><input type="number" step="0.01" id="coef_en_ligne"></div>
               <div class="field"><div class="k">Marge en ligne</div><input type="number" step="0.01" id="marge_en_ligne"></div>
+
               <div class="field"><div class="k">Coef marge</div><input type="number" step="0.01" id="coef_marge"></div>
               <div class="field"><div class="k">Frais Vinted + livraison</div><input type="number" step="0.01" id="frais_vinted_livraison"></div>
+
               <div class="field" style="grid-column:1/-1">
                 <div class="k">Calculs</div>
                 <div class="calc" id="calc_financier">
@@ -394,7 +393,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // IMPORTANT : mêmes valeurs que tes autres pages
     const supabaseUrl = "https://ghgmifhqgqiqignowred.supabase.co";
     const supabaseKey = "sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
     const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -405,7 +403,6 @@
     const el = (id) => document.getElementById(id);
     const setLast = (txt) => el("last_action").value = txt;
 
-    // ===== Unsaved changes guard =====
     let hasChanges = false;
     function setDirty(on){
       hasChanges = on;
@@ -434,7 +431,6 @@
       if (error || !data?.session) location.href = "index.html";
     }
 
-    // ===== Status badge =====
     function updateStatus(){
       const dV = el("date_vente").value;
       const dMEL = el("date_mise_en_ligne").value;
@@ -455,7 +451,6 @@
       }
     }
 
-    // ===== Calculs =====
     function calcFinancier(){
       const prix = toNumber(el("prix_ha").value);
       const ca = toNumber(el("ca_encaisse").value);
@@ -491,12 +486,127 @@
     }
 
     function wireDirtyTracking(){
-      // Dès qu'on modifie un champ => dirty
       document.querySelectorAll("input").forEach(inp => {
         if (inp.disabled) return;
         inp.addEventListener("input", () => setDirty(true));
       });
     }
+
+    // ===== AJOUT : moteur de recalcul Prix/Coef/Marge EN LIGNE =====
+    let __syncingLine = false;
+    let __lastLineEdited = null; // "prix" | "coef" | "marge"
+
+    function setInputNumber(id, value){
+      const input = el(id);
+      if (!input) return;
+      if (value === null || value === undefined || !Number.isFinite(value)){
+        input.value = "";
+        return;
+      }
+      input.value = value.toFixed(2);
+    }
+
+    function getInputNumberOrNull(id){
+      const v = el(id)?.value;
+      if (v === "" || v === null || v === undefined) return null;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function recomputeFromPrixEnLigne(){
+      const prixHA = toNumber(el("prix_ha").value);
+      const prixEnLigne = getInputNumberOrNull("prix_en_ligne");
+      if (prixEnLigne === null) return;
+
+      const coef = (prixHA > 0) ? (prixEnLigne / prixHA) : 0;
+      const marge = prixEnLigne - prixHA;
+
+      __syncingLine = true;
+      setInputNumber("coef_en_ligne", coef);
+      setInputNumber("marge_en_ligne", marge);
+      __syncingLine = false;
+    }
+
+    function recomputeFromCoefEnLigne(){
+      const prixHA = toNumber(el("prix_ha").value);
+      const coef = getInputNumberOrNull("coef_en_ligne");
+      if (coef === null) return;
+
+      const prixEnLigne = prixHA * coef;
+      const marge = prixHA * (coef - 1); // cohérent avec prix_en_ligne - prix_ha
+
+      __syncingLine = true;
+      setInputNumber("prix_en_ligne", prixEnLigne);
+      setInputNumber("marge_en_ligne", marge);
+      __syncingLine = false;
+    }
+
+    function recomputeFromMargeEnLigne(){
+      const prixHA = toNumber(el("prix_ha").value);
+      const marge = getInputNumberOrNull("marge_en_ligne");
+      if (marge === null) return;
+
+      const prixEnLigne = prixHA + marge;
+      const coef = (prixHA > 0) ? ((marge / prixHA) + 1) : 0;
+
+      __syncingLine = true;
+      setInputNumber("prix_en_ligne", prixEnLigne);
+      setInputNumber("coef_en_ligne", coef);
+      __syncingLine = false;
+    }
+
+    function recomputeOnPrixHAChange(){
+      // Quand prix_ha change, on recalc selon le dernier champ modifié,
+      // sinon on utilise la meilleure info disponible.
+      if (__lastLineEdited === "prix") return recomputeFromPrixEnLigne();
+      if (__lastLineEdited === "coef") return recomputeFromCoefEnLigne();
+      if (__lastLineEdited === "marge") return recomputeFromMargeEnLigne();
+
+      // fallback si aucune saisie "source" connue
+      if (el("prix_en_ligne").value !== "") return recomputeFromPrixEnLigne();
+      if (el("coef_en_ligne").value !== "") return recomputeFromCoefEnLigne();
+      if (el("marge_en_ligne").value !== "") return recomputeFromMargeEnLigne();
+    }
+
+    function wireLineRecalcs(){
+      const prixInput = el("prix_en_ligne");
+      const coefInput = el("coef_en_ligne");
+      const margeInput = el("marge_en_ligne");
+      const prixHAInput = el("prix_ha");
+
+      if (prixInput){
+        prixInput.addEventListener("input", () => {
+          if (__syncingLine) return;
+          __lastLineEdited = "prix";
+          recomputeFromPrixEnLigne();
+        });
+      }
+
+      if (coefInput){
+        coefInput.addEventListener("input", () => {
+          if (__syncingLine) return;
+          __lastLineEdited = "coef";
+          recomputeFromCoefEnLigne();
+        });
+      }
+
+      if (margeInput){
+        margeInput.addEventListener("input", () => {
+          if (__syncingLine) return;
+          __lastLineEdited = "marge";
+          recomputeFromMargeEnLigne();
+        });
+      }
+
+      // Recalc si prix_ha change
+      if (prixHAInput){
+        prixHAInput.addEventListener("input", () => {
+          if (__syncingLine) return;
+          recomputeOnPrixHAChange();
+        });
+      }
+    }
+    // ===== FIN AJOUT =====
 
     // ===== Photos state =====
     let photos = [];
@@ -520,7 +630,6 @@
     }
 
     async function ensureMainAfterDeletion(articleId){
-      // S'il n'y a plus de photo principale mais qu'il reste des photos => en définir une
       const r = await sb.from("article_photos")
         .select("id, is_main, sort_order")
         .eq("article_id", articleId)
@@ -535,18 +644,15 @@
       const hasMain = rows.some(x => x.is_main === true);
       if (hasMain) return;
 
-      // Définir la première comme principale
       await sb.from("article_photos").update({ is_main: true }).eq("id", rows[0].id);
     }
 
     async function setMainPhoto(photoId){
-      // 1) reset toutes les photos de l'article
       const r1 = await sb.from("article_photos").update({ is_main: false }).eq("article_id", Number(recordId));
       if (r1.error){
         alert("Impossible de réinitialiser les photos : " + r1.error.message);
         return;
       }
-      // 2) set main
       const r2 = await sb.from("article_photos").update({ is_main: true }).eq("id", photoId);
       if (r2.error){
         alert("Impossible de définir la principale : " + r2.error.message);
@@ -599,7 +705,6 @@
         img.src = safeUrl(p) || "";
         d.appendChild(img);
 
-        // ★ principale
         const mainBtn = document.createElement("button");
         mainBtn.className = "main";
         mainBtn.type = "button";
@@ -611,7 +716,6 @@
         });
         d.appendChild(mainBtn);
 
-        // × supprimer
         const del = document.createElement("button");
         del.className = "del";
         del.type = "button";
@@ -623,7 +727,6 @@
         });
         d.appendChild(del);
 
-        // Indicateur "Principale"
         if (p.is_main === true){
           const crown = document.createElement("div");
           crown.className = "crown";
@@ -675,7 +778,6 @@
       renderThumbs();
     }
 
-    // ===== Article load/save =====
     async function loadProduct(){
       const r = await sb.from("ListeProduit").select("*").eq("id", Number(recordId)).single();
       if (r.error){
@@ -691,14 +793,14 @@
       el("id_read").value = p.id;
       el("subtitle").textContent = `${p.numero || "—"} • ${p.article || "—"} • ${p.modele || "—"}`;
 
-const map = [
-  "numero","article","taille","modele","couleur",
-  "date_ha","date_mise_en_ligne","date_vente",
-  "qui",
-  "prix_ha","ca_encaisse",
-  "prix_en_ligne","coef_en_ligne","marge_en_ligne","coef_marge","frais_vinted_livraison",
-  "client_id","date_recep"
-];
+      const map = [
+        "numero","article","taille","modele","couleur",
+        "date_ha","date_mise_en_ligne","date_vente",
+        "qui",
+        "prix_ha","ca_encaisse",
+        "prix_en_ligne","coef_en_ligne","marge_en_ligne","coef_marge","frais_vinted_livraison",
+        "client_id","date_recep"
+      ];
       map.forEach(k => { if (el(k)) el(k).value = (p[k] ?? ""); });
 
       updateStatus();
@@ -727,7 +829,6 @@ const map = [
         marge_en_ligne: el("marge_en_ligne").value === "" ? null : Number(el("marge_en_ligne").value),
         coef_marge: el("coef_marge").value === "" ? null : Number(el("coef_marge").value),
         frais_vinted_livraison: el("frais_vinted_livraison").value === "" ? null : Number(el("frais_vinted_livraison").value)
-
       };
 
       const r = await sb.from("ListeProduit").update(payload).eq("id", Number(recordId));
@@ -751,7 +852,6 @@ const map = [
       location.href = "articles.html";
     }
 
-    // Upload photo (first photo => is_main true)
     el("photoInput").addEventListener("change", async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
@@ -793,7 +893,6 @@ const map = [
       await loadPhotos();
     });
 
-    // Wire buttons
     el("saveBtn").addEventListener("click", save);
     el("backBtn").addEventListener("click", () => {
       if (hasChanges){
@@ -804,7 +903,6 @@ const map = [
     });
     el("deleteBtn").addEventListener("click", deleteArticle);
 
-    // Track changes + trigger recalculations
     function wireRecalcs(){
       ["prix_ha","ca_encaisse"].forEach(id => el(id).addEventListener("input", () => {
         calcFinancier();
@@ -821,6 +919,7 @@ const map = [
       await requireSession();
       wireDirtyTracking();
       wireRecalcs();
+      wireLineRecalcs(); // ✅ AJOUT : recalcul des champs "en ligne"
       await loadProduct();
       await loadPhotos();
       setLast("Page chargée");
