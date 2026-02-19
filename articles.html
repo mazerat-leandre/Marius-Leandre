@@ -41,9 +41,10 @@
         var(--bg);
     }
     .wrap{max-width:1200px;margin:0 auto;padding:28px 18px 60px}
+
     .topbar{
       display:flex;align-items:flex-start;justify-content:space-between;
-      flex-wrap:wrap;gap:12px;margin-bottom:16px;
+      flex-wrap:wrap;gap:12px;margin-bottom:10px;
     }
     h1{margin:0;font-size:22px;font-weight:900;letter-spacing:.2px}
     .subtitle{color:var(--muted);font-size:13px;margin-top:6px}
@@ -68,39 +69,15 @@
       background:rgba(255,77,109,.12);
     }
 
-    .panel{
-      background:var(--panel);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      box-shadow:0 18px 60px rgba(0,0,0,.45);
-      overflow:hidden;
-      backdrop-filter: blur(12px);
-    }
-    .panelHeader{
-      display:flex;align-items:center;justify-content:space-between;
-      padding:14px 16px;
-      border-bottom:1px solid var(--border);
-      background:rgba(255,255,255,.03);
-      gap:12px;
-      flex-wrap:wrap;
-    }
-    .panelHeader .h{font-weight:900;font-size:14px}
-    .panelBody{padding:14px}
-    .chip{
-      font-size:12px; padding:6px 10px; border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.05);
-      color:var(--muted);
-      font-weight:800;
-    }
-
-    .toolbar{
+    /* Filtres sous le titre */
+    .filters{
       display:flex;
       gap:10px;
       flex-wrap:wrap;
       align-items:center;
-      width:100%;
+      margin: 10px 0 16px 0;
     }
+
     .search{
       display:flex;
       align-items:center;
@@ -109,8 +86,8 @@
       border-radius:14px;
       border:1px solid rgba(255,255,255,.12);
       background:rgba(255,255,255,.04);
-      flex: 1 1 280px;
-      min-width: 220px;
+      flex: 1 1 260px;
+      min-width: 200px;
     }
     .search input{
       width:100%;
@@ -123,22 +100,52 @@
     }
     .search span{color:var(--muted2);font-weight:900}
 
-    .select{
+    .input{
       padding:10px 12px;
       border-radius:14px;
       border:1px solid rgba(255,255,255,.12);
       background:rgba(255,255,255,.04);
       color:var(--text);
-      font-weight:900;
+      font-weight:800;
       font-size:13px;
       outline:none;
       min-width: 140px;
     }
-    @media(max-width:520px){
-      .select{min-width:120px; padding:9px 10px; font-size:12px}
-      .btn{padding:9px 10px; font-size:12px}
-      .search{min-width: 180px}
+
+    .select{
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      font-weight:900;
+      font-size:13px;
+      outline:none;
+      min-width: 160px;
     }
+    /* ✅ rend les options lisibles */
+    .select option{
+      background:#0b1220;
+      color:#ffffff;
+    }
+
+    .chip{
+      font-size:12px; padding:6px 10px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.05);
+      color:var(--muted);
+      font-weight:900;
+    }
+
+    .panel{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      backdrop-filter: blur(12px);
+    }
+    .panelBody{padding:14px}
 
     .errorBox{
       margin-top:14px;
@@ -148,7 +155,7 @@
       background:rgba(255,77,109,.10);
       color:rgba(255,255,255,.92);
       display:none;
-      font-weight:800;
+      font-weight:900;
       font-size:13px;
       line-height:1.4;
       white-space:pre-wrap;
@@ -192,7 +199,7 @@
       text-underline-offset: 2px;
     }
 
-    /* Statut compact */
+    /* Statut mini */
     .statusMini{
       display:inline-flex;
       align-items:center;
@@ -218,6 +225,11 @@
       max-width:100%;
       display:inline-block;
     }
+
+    @media(max-width:520px){
+      .input{min-width:120px}
+      .select{min-width:140px}
+    }
   </style>
 </head>
 
@@ -236,40 +248,29 @@
       </div>
     </div>
 
-    <div class="panel">
-      <div class="panelHeader">
-        <div class="h">Filtres</div>
-
-        <div class="toolbar">
-          <div class="search">
-            <span>🔎</span>
-            <input id="quickSearch" placeholder="Recherche (article)...">
-          </div>
-
-          <select class="select" id="fStatus">
-            <option value="">Statut: Tous</option>
-            <option value="EN STOCK">En stock</option>
-            <option value="EN LIGNE">En ligne</option>
-            <option value="VENDU">Vendu</option>
-          </select>
-
-          <select class="select" id="fTaille">
-            <option value="">Taille: Toutes</option>
-          </select>
-
-          <select class="select" id="fCouleur">
-            <option value="">Couleur: Toutes</option>
-          </select>
-
-          <select class="select" id="fModele">
-            <option value="">Modèle: Tous</option>
-          </select>
-
-          <button class="btn" id="btnReset">Reset</button>
-          <div class="chip" id="countChip">0</div>
-        </div>
+    <!-- ✅ Zone filtres sous le titre -->
+    <div class="filters">
+      <div class="search">
+        <span>🔎</span>
+        <input id="q" placeholder="Recherche (article)">
       </div>
 
+      <select class="select" id="status">
+        <option value="">Statut : Tous</option>
+        <option value="EN STOCK">En stock</option>
+        <option value="EN LIGNE">En ligne</option>
+        <option value="VENDU">Vendu</option>
+      </select>
+
+      <input class="input" id="taille" placeholder="Taille">
+      <input class="input" id="couleur" placeholder="Couleur">
+      <input class="input" id="modele" placeholder="Modèle">
+
+      <button class="btn" id="reset">Reset</button>
+      <div class="chip" id="count">0</div>
+    </div>
+
+    <div class="panel">
       <div class="panelBody">
         <div style="overflow-x:auto;">
           <div id="table"></div>
@@ -287,24 +288,14 @@
     const supabaseKey="sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
     const sb=window.supabase.createClient(supabaseUrl,supabaseKey);
 
-    const el=(id)=>document.getElementById(id);
-
-    function showError(msg){
-      el("err").style.display="block";
-      el("err").textContent=msg;
-    }
-    function clearError(){
-      el("err").style.display="none";
-      el("err").textContent="";
-    }
+    const el = (id)=>document.getElementById(id);
+    function showError(msg){ el("err").style.display="block"; el("err").textContent=msg; }
+    function clearError(){ el("err").style.display="none"; el("err").textContent=""; }
 
     async function requireSession(){
       const {data, error} = await sb.auth.getSession();
       if (error) throw error;
-      if (!data.session){
-        window.location.href="index.html";
-        return null;
-      }
+      if (!data.session){ location.href="index.html"; return null; }
       el("sub").textContent = "Connecté : " + (data.session.user?.email || "—");
       return data.session;
     }
@@ -313,13 +304,10 @@
     function normL(v){ return norm(v).toLowerCase(); }
 
     function computeStatus(row){
-      const dV = row?.date_vente;
-      const dM = row?.date_mise_en_ligne;
-      if (dV) return "VENDU";
-      if (dM) return "EN LIGNE";
+      if (row?.date_vente) return "VENDU";
+      if (row?.date_mise_en_ligne) return "EN LIGNE";
       return "EN STOCK";
     }
-
     function statusShort(full){
       if (full === "VENDU") return "V";
       if (full === "EN LIGNE") return "L";
@@ -331,63 +319,32 @@
       return "statusMini s-stock";
     }
 
-    // Remplit un select avec des valeurs uniques
-    function fillSelect(selectId, values, emptyLabel){
-      const s = el(selectId);
-      const current = s.value;
-
-      s.innerHTML = "";
-      const o0 = document.createElement("option");
-      o0.value = "";
-      o0.textContent = emptyLabel;
-      s.appendChild(o0);
-
-      values
-        .filter(v => norm(v) !== "")
-        .map(v => norm(v))
-        .sort((a,b)=>a.localeCompare(b, "fr", { sensitivity:"base" }))
-        .forEach(v=>{
-          const o = document.createElement("option");
-          o.value = v;
-          o.textContent = v;
-          s.appendChild(o);
-        });
-
-      // tenter de restaurer la sélection
-      if ([...s.options].some(o=>o.value===current)) s.value = current;
-    }
-
     function applyFilters(){
       if (!window.__table) return;
 
-      const q = normL(el("quickSearch").value);
-      const st = norm(el("fStatus").value);
-      const ta = norm(el("fTaille").value);
-      const co = norm(el("fCouleur").value);
-      const mo = norm(el("fModele").value);
+      const q = normL(el("q").value);
+      const st = norm(el("status").value);
+      const t = normL(el("taille").value);
+      const c = normL(el("couleur").value);
+      const m = normL(el("modele").value);
 
       window.__table.clearFilter();
 
-      window.__table.addFilter((data)=>{
+      window.__table.addFilter((d)=>{
         if (q){
-          // recherche sur article + modele/couleur/taille pour aider
-          const hay = [data.article, data.modele, data.couleur, data.taille].map(normL).join(" | ");
-          if (!hay.includes(q)) return false;
+          if (!normL(d.article).includes(q)) return false;
         }
-        if (st && data.__status !== st) return false;
-        if (ta && norm(data.taille) !== ta) return false;
-        if (co && norm(data.couleur) !== co) return false;
-        if (mo && norm(data.modele) !== mo) return false;
+        if (st && d.__status !== st) return false;
+        if (t && !normL(d.taille).includes(t)) return false;
+        if (c && !normL(d.couleur).includes(c)) return false;
+        if (m && !normL(d.modele).includes(m)) return false;
         return true;
       });
 
-      // compteur visible
-      el("countChip").textContent = String(window.__table.getDataCount("active"));
+      el("count").textContent = String(window.__table.getDataCount("active"));
     }
 
     function buildTable(){
-      if (!window.Tabulator) throw new Error("Tabulator non chargé (CDN bloqué).");
-
       return new Tabulator("#table", {
         layout:"fitColumns",
         responsiveLayout:"collapse",
@@ -417,7 +374,6 @@
             field:"article",
             minWidth:200,
             widthGrow:6,
-            headerSort:true,
             responsive:0,
             formatter:(cell)=>{
               const row = cell.getRow().getData();
@@ -429,34 +385,15 @@
                       </a>`;
             }
           },
-          {
-            title:"T",
-            field:"taille",
-            width:70,
-            responsive:2
-          },
-          {
-            title:"Coul.",
-            field:"couleur",
-            width:95,
-            responsive:3
-          },
-          {
-            title:"Mod.",
-            field:"modele",
-            minWidth:120,
-            widthGrow:2,
-            responsive:4
-          },
+          { title:"T", field:"taille", width:70, responsive:2 },
+          { title:"Coul.", field:"couleur", width:95, responsive:3 },
+          { title:"Mod.", field:"modele", minWidth:120, widthGrow:2, responsive:4 },
         ],
       });
     }
 
-    let __allRows = [];
-
-    async function loadData(table){
+    async function loadData(){
       clearError();
-
       const {data, error} = await sb
         .from("ListeProduit")
         .select("id, article, taille, modele, couleur, date_mise_en_ligne, date_vente")
@@ -465,44 +402,30 @@
 
       if (error) throw error;
 
-      __allRows = (data || []).map(r => ({ ...r, __status: computeStatus(r) }));
+      const rows = (data || []).map(r => ({ ...r, __status: computeStatus(r) }));
 
-      table.setData(__allRows);
-
-      // Remplir les dropdowns à partir des données
-      fillSelect("fTaille", __allRows.map(x=>x.taille), "Taille: Toutes");
-      fillSelect("fCouleur", __allRows.map(x=>x.couleur), "Couleur: Toutes");
-      fillSelect("fModele", __allRows.map(x=>x.modele), "Modèle: Tous");
-
-      // init count + filtres
-      el("countChip").textContent = String(__allRows.length);
+      window.__table.setData(rows);
+      el("count").textContent = String(rows.length);
       applyFilters();
     }
 
-    // Actions
-    el("btnHome").addEventListener("click", ()=>window.location.href="index.html");
-    el("btnAdd").addEventListener("click", ()=>window.location.href="admin.html");
-    el("btnReload").addEventListener("click", async ()=>{
-      try{ await loadData(window.__table); } catch(err){ console.error(err); showError(err?.message || err); }
-    });
-    el("btnLogout").addEventListener("click", async ()=>{
-      await sb.auth.signOut();
-      window.location.href="index.html";
-    });
+    // Boutons haut
+    el("btnHome").addEventListener("click", ()=>location.href="index.html");
+    el("btnAdd").addEventListener("click", ()=>location.href="admin.html");
+    el("btnReload").addEventListener("click", ()=>loadData().catch(e=>showError(e.message || e)));
+    el("btnLogout").addEventListener("click", async ()=>{ await sb.auth.signOut(); location.href="index.html"; });
 
     // Events filtres
-    el("quickSearch").addEventListener("input", ()=>applyFilters());
-    el("fStatus").addEventListener("change", ()=>applyFilters());
-    el("fTaille").addEventListener("change", ()=>applyFilters());
-    el("fCouleur").addEventListener("change", ()=>applyFilters());
-    el("fModele").addEventListener("change", ()=>applyFilters());
+    ["q","status","taille","couleur","modele"].forEach(id=>{
+      el(id).addEventListener(id==="status" ? "change" : "input", applyFilters);
+    });
 
-    el("btnReset").addEventListener("click", ()=>{
-      el("quickSearch").value = "";
-      el("fStatus").value = "";
-      el("fTaille").value = "";
-      el("fCouleur").value = "";
-      el("fModele").value = "";
+    el("reset").addEventListener("click", ()=>{
+      el("q").value="";
+      el("status").value="";
+      el("taille").value="";
+      el("couleur").value="";
+      el("modele").value="";
       applyFilters();
     });
 
@@ -510,7 +433,7 @@
       try{
         await requireSession();
         window.__table = buildTable();
-        await loadData(window.__table);
+        await loadData();
       }catch(err){
         console.error(err);
         showError("Erreur : " + (err?.message || err));
