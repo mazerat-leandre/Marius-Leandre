@@ -356,6 +356,14 @@
             <div class="kv">
               <div class="field"><div class="k">Prix HA</div><input type="number" step="0.01" id="prix_ha"></div>
               <div class="field"><div class="k">CA encaissé</div><input type="number" step="0.01" id="ca_encaisse"></div>
+
+              <div class="field"><div class="k">Prix en ligne</div><input type="number" step="0.01" id="prix_en_ligne"></div>
+              <div class="field"><div class="k">Coef en ligne</div><input type="number" step="0.01" id="coef_en_ligne"></div>
+              <div class="field"><div class="k">Marge en ligne</div><input type="number" step="0.01" id="marge_en_ligne"></div>
+
+              <div class="field"><div class="k">Coef marge</div><input type="number" step="0.01" id="coef_marge" disabled title="Calculé automatiquement : CA encaissé / Prix HA"></div>
+              <div class="field"><div class="k">Frais Vinted + livraison</div><input type="number" step="0.01" id="frais_vinted_livraison"></div>
+
               <div class="field" style="grid-column:1/-1">
                 <div class="k">Calculs</div>
                 <div class="calc" id="calc_financier">
@@ -541,11 +549,18 @@ if (!mode) mode = recordId ? "view" : "new";
     }
 
     // ===== Calculs =====
-    function calcFinancier(){
+        function calcFinancier(){
       const prix = toNumber(el("prix_ha").value);
       const ca = toNumber(el("ca_encaisse").value);
-      const marge = ca - prix;
+
+      // Marge dégagée: si CA encaissé > 0 alors CA - PrixHA sinon 0
+      const marge = (ca > 0) ? (ca - prix) : 0;
+
+      // Coef marge: CA / PrixHA si possible sinon 0
       const coef = (prix > 0 && ca > 0) ? (ca / prix) : 0;
+
+      // Champ coef_marge (désactivé) = coef calculé
+      if (el("coef_marge")) el("coef_marge").value = coef.toFixed(2);
 
       el("calc_financier").innerHTML =
         `<span class="muted">Marge :</span> ${marge.toFixed(2)} € &nbsp; • &nbsp; <span class="muted">Coef :</span> ${coef.toFixed(2)}`;
@@ -561,10 +576,12 @@ if (!mode) mode = recordId ? "view" : "new";
       el("d_ar").textContent = fmtDays((dHA && dV) ? diffDays(dHA, dV) : null);
     }
 
-    function updateMiniStats(){
+        function updateMiniStats(){
       const prix = toNumber(el("prix_ha").value);
       const ca = toNumber(el("ca_encaisse").value);
-      const marge = ca - prix;
+
+      // Marge dégagée: si CA encaissé > 0 alors CA - PrixHA sinon 0
+      const marge = (ca > 0) ? (ca - prix) : 0;
 
       const dHA = parseDateSafe(el("date_ha").value);
       const dV = parseDateSafe(el("date_vente").value);
@@ -582,6 +599,111 @@ if (!mode) mode = recordId ? "view" : "new";
         inp.addEventListener("input", () => setDirty(true));
       });
     }
+
+    // ===== Recalcul automatique "en ligne" (prix_en_ligne / coef_en_ligne / marge_en_ligne) =====
+    let __syncLine = false;
+    let __lastLineEdited = null; // "prix" | "coef" | "marge"
+
+    function numOrNull(id){
+      const v = el(id)?.value;
+      if (v === "" || v === null || v === undefined) return null;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function setNum(id, value){
+      if (!el(id)) return;
+      if (value === null || value === undefined || !Number.isFinite(value)){
+        el(id).value = "";
+        return;
+      }
+      el(id).value = value.toFixed(2);
+    }
+
+    function recomputeFromPrixEnLigne(){
+      const prixHA = toNumber(el("prix_ha").value);
+      const prixL = numOrNull("prix_en_ligne");
+      if (prixL === null) return;
+
+      const coefL = (prixHA > 0) ? (prixL / prixHA) : 0;
+      const margeL = prixL - prixHA;
+
+      __syncLine = true;
+      setNum("coef_en_ligne", coefL);
+      setNum("marge_en_ligne", margeL);
+      __syncLine = false;
+    }
+
+    function recomputeFromCoefEnLigne(){
+      const prixHA = toNumber(el("prix_ha").value);
+      const coefL = numOrNull("coef_en_ligne");
+      if (coefL === null) return;
+
+      const prixL = prixHA * coefL;
+      const margeL = prixL - prixHA; // cohérent : marge = prix - prixHA
+
+      __syncLine = true;
+      setNum("prix_en_ligne", prixL);
+      setNum("marge_en_ligne", margeL);
+      __syncLine = false;
+    }
+
+    function recomputeFromMargeEnLigne(){
+      const prixHA = toNumber(el("prix_ha").value);
+      const margeL = numOrNull("marge_en_ligne");
+      if (margeL === null) return;
+
+      const prixL = prixHA + margeL;
+      const coefL = (prixHA > 0) ? ((margeL / prixHA) + 1) : 0;
+
+      __syncLine = true;
+      setNum("prix_en_ligne", prixL);
+      setNum("coef_en_ligne", coefL);
+      __syncLine = false;
+    }
+
+    function recomputeLineOnPrixHAChange(){
+      if (__lastLineEdited === "prix") return recomputeFromPrixEnLigne();
+      if (__lastLineEdited === "coef") return recomputeFromCoefEnLigne();
+      if (__lastLineEdited === "marge") return recomputeFromMargeEnLigne();
+
+      // fallback
+      if (el("prix_en_ligne")?.value) return recomputeFromPrixEnLigne();
+      if (el("coef_en_ligne")?.value) return recomputeFromCoefEnLigne();
+      if (el("marge_en_ligne")?.value) return recomputeFromMargeEnLigne();
+    }
+
+    function wireLineRecalcs(){
+      if (el("prix_en_ligne")){
+        el("prix_en_ligne").addEventListener("input", () => {
+          if (__syncLine) return;
+          __lastLineEdited = "prix";
+          recomputeFromPrixEnLigne();
+        });
+      }
+      if (el("coef_en_ligne")){
+        el("coef_en_ligne").addEventListener("input", () => {
+          if (__syncLine) return;
+          __lastLineEdited = "coef";
+          recomputeFromCoefEnLigne();
+        });
+      }
+      if (el("marge_en_ligne")){
+        el("marge_en_ligne").addEventListener("input", () => {
+          if (__syncLine) return;
+          __lastLineEdited = "marge";
+          recomputeFromMargeEnLigne();
+        });
+      }
+      if (el("prix_ha")){
+        el("prix_ha").addEventListener("input", () => {
+          if (__syncLine) return;
+          recomputeLineOnPrixHAChange();
+        });
+      }
+    }
+    // ===== Fin recalcul "en ligne" =====
+
 
     // ===== Photos state =====
     let photos = [];
@@ -802,6 +924,26 @@ if (!mode) mode = recordId ? "view" : "new";
         qui: el("qui").value,
         prix_ha: el("prix_ha").value === "" ? null : Number(el("prix_ha").value),
         ca_encaisse: el("ca_encaisse").value === "" ? null : Number(el("ca_encaisse").value),
+
+        // Marge (base) : si CA encaissé > 0 => CA - PrixHA sinon 0
+        marge: (() => {
+          const prix = Number(el("prix_ha").value);
+          const ca = Number(el("ca_encaisse").value);
+          return (isFinite(prix) && isFinite(ca) && ca > 0) ? (ca - prix) : 0;
+        })(),
+
+        // Coef marge (base) : CA / PrixHA si possible sinon 0
+        coef_marge: (() => {
+          const prix = Number(el("prix_ha").value);
+          const ca = Number(el("ca_encaisse").value);
+          return (isFinite(prix) && isFinite(ca) && ca > 0 && prix > 0) ? (ca / prix) : 0;
+        })(),
+
+        prix_en_ligne: el("prix_en_ligne") && el("prix_en_ligne").value !== "" ? Number(el("prix_en_ligne").value) : null,
+        coef_en_ligne: el("coef_en_ligne") && el("coef_en_ligne").value !== "" ? Number(el("coef_en_ligne").value) : null,
+        marge_en_ligne: el("marge_en_ligne") && el("marge_en_ligne").value !== "" ? Number(el("marge_en_ligne").value) : null,
+        frais_vinted_livraison: el("frais_vinted_livraison") && el("frais_vinted_livraison").value !== "" ? Number(el("frais_vinted_livraison").value) : null,
+
         client_id: el("client_id").value,
         date_recep: el("date_recep").value || null
       };
@@ -926,6 +1068,7 @@ if (!mode) mode = recordId ? "view" : "new";
 
       wireDirtyTracking();
       wireRecalcs();
+      wireLineRecalcs();
 
       if (recordId){
         await loadProduct();
