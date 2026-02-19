@@ -25,7 +25,6 @@
       --muted2:rgba(255,255,255,.52);
       --accent:#7c5cff;
       --danger:#ff4d6d;
-      --ok:#2dd4bf;
       --shadow:0 18px 60px rgba(0,0,0,.45);
       --radius:18px;
     }
@@ -73,7 +72,7 @@
       background:var(--panel);
       border:1px solid var(--border);
       border-radius:var(--radius);
-      box-shadow:var(--shadow);
+      box-shadow:0 18px 60px rgba(0,0,0,.45);
       overflow:hidden;
       backdrop-filter: blur(12px);
     }
@@ -110,8 +109,8 @@
       border-radius:14px;
       border:1px solid rgba(255,255,255,.12);
       background:rgba(255,255,255,.04);
-      flex: 1 1 360px;
-      min-width: 240px;
+      flex: 1 1 280px;
+      min-width: 220px;
     }
     .search input{
       width:100%;
@@ -123,6 +122,23 @@
       font-size:13px;
     }
     .search span{color:var(--muted2);font-weight:900}
+
+    .select{
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      font-weight:900;
+      font-size:13px;
+      outline:none;
+      min-width: 140px;
+    }
+    @media(max-width:520px){
+      .select{min-width:120px; padding:9px 10px; font-size:12px}
+      .btn{padding:9px 10px; font-size:12px}
+      .search{min-width: 180px}
+    }
 
     .errorBox{
       margin-top:14px;
@@ -157,28 +173,12 @@
       background:rgba(255,255,255,.02) !important;
       border-bottom:1px solid rgba(255,255,255,.06) !important;
     }
-    .tabulator .tabulator-row:hover{
-      background:rgba(124,92,255,.10) !important;
-    }
+    .tabulator .tabulator-row:hover{ background:rgba(124,92,255,.10) !important; }
     .tabulator .tabulator-cell{
       border-right:1px solid rgba(255,255,255,.05) !important;
       padding:8px 8px !important;
     }
-    .tabulator .tabulator-footer{
-      background:rgba(255,255,255,.03) !important;
-      border-top:1px solid rgba(255,255,255,.10) !important;
-    }
-    .tabulator .tabulator-header-filter input{
-      background:rgba(255,255,255,.08) !important;
-      border:1px solid rgba(255,255,255,.15) !important;
-      color:var(--text) !important;
-      border-radius:8px !important;
-      padding:6px 8px !important;
-      font-weight:800 !important;
-      font-size:12px !important;
-    }
 
-    /* Liens cliquables */
     a.cellLink{
       color:inherit;
       text-decoration:none;
@@ -192,19 +192,18 @@
       text-underline-offset: 2px;
     }
 
-    /* Badge statut compact (mobile-friendly) */
+    /* Statut compact */
     .statusMini{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      width:34px;            /* ✅ très compact */
+      width:34px;
       height:22px;
       border-radius:999px;
       font-weight:900;
-      letter-spacing:.02em;
       border:1px solid rgba(255,255,255,.14);
       background:rgba(255,255,255,.06);
-      font-size:11px;        /* ✅ police réduite */
+      font-size:11px;
       line-height:1;
       flex:0 0 auto;
     }
@@ -239,13 +238,32 @@
 
     <div class="panel">
       <div class="panelHeader">
-        <div class="h">Tableau</div>
+        <div class="h">Filtres</div>
 
         <div class="toolbar">
           <div class="search">
             <span>🔎</span>
-            <input id="quickSearch" placeholder="Recherche rapide : article, modèle, couleur, taille…">
+            <input id="quickSearch" placeholder="Recherche (article)...">
           </div>
+
+          <select class="select" id="fStatus">
+            <option value="">Statut: Tous</option>
+            <option value="EN STOCK">En stock</option>
+            <option value="EN LIGNE">En ligne</option>
+            <option value="VENDU">Vendu</option>
+          </select>
+
+          <select class="select" id="fTaille">
+            <option value="">Taille: Toutes</option>
+          </select>
+
+          <select class="select" id="fCouleur">
+            <option value="">Couleur: Toutes</option>
+          </select>
+
+          <select class="select" id="fModele">
+            <option value="">Modèle: Tous</option>
+          </select>
 
           <button class="btn" id="btnReset">Reset</button>
           <div class="chip" id="countChip">0</div>
@@ -291,9 +309,8 @@
       return data.session;
     }
 
-    function normalizeStr(v){
-      return (v ?? "").toString().toLowerCase().trim();
-    }
+    function norm(v){ return (v ?? "").toString().trim(); }
+    function normL(v){ return norm(v).toLowerCase(); }
 
     function computeStatus(row){
       const dV = row?.date_vente;
@@ -306,35 +323,66 @@
     function statusShort(full){
       if (full === "VENDU") return "V";
       if (full === "EN LIGNE") return "L";
-      return "S"; // EN STOCK
+      return "S";
     }
-
     function statusClass(full){
       if (full === "VENDU") return "statusMini s-sold";
       if (full === "EN LIGNE") return "statusMini s-online";
       return "statusMini s-stock";
     }
 
-    function containsFilter(headerValue, rowValue){
-      const hv = normalizeStr(headerValue);
-      if (!hv) return true;
-      return normalizeStr(rowValue).includes(hv);
+    // Remplit un select avec des valeurs uniques
+    function fillSelect(selectId, values, emptyLabel){
+      const s = el(selectId);
+      const current = s.value;
+
+      s.innerHTML = "";
+      const o0 = document.createElement("option");
+      o0.value = "";
+      o0.textContent = emptyLabel;
+      s.appendChild(o0);
+
+      values
+        .filter(v => norm(v) !== "")
+        .map(v => norm(v))
+        .sort((a,b)=>a.localeCompare(b, "fr", { sensitivity:"base" }))
+        .forEach(v=>{
+          const o = document.createElement("option");
+          o.value = v;
+          o.textContent = v;
+          s.appendChild(o);
+        });
+
+      // tenter de restaurer la sélection
+      if ([...s.options].some(o=>o.value===current)) s.value = current;
     }
 
-    function applyQuickSearch(){
+    function applyFilters(){
       if (!window.__table) return;
-      const q = normalizeStr(el("quickSearch").value);
 
-      window.__table.clearFilter(true);
+      const q = normL(el("quickSearch").value);
+      const st = norm(el("fStatus").value);
+      const ta = norm(el("fTaille").value);
+      const co = norm(el("fCouleur").value);
+      const mo = norm(el("fModele").value);
 
-      if (!q) return;
+      window.__table.clearFilter();
 
-      window.__table.addFilter((data) => {
-        const hay = [
-          data.article, data.taille, data.couleur, data.modele, data.__status
-        ].map(normalizeStr).join(" | ");
-        return hay.includes(q);
+      window.__table.addFilter((data)=>{
+        if (q){
+          // recherche sur article + modele/couleur/taille pour aider
+          const hay = [data.article, data.modele, data.couleur, data.taille].map(normL).join(" | ");
+          if (!hay.includes(q)) return false;
+        }
+        if (st && data.__status !== st) return false;
+        if (ta && norm(data.taille) !== ta) return false;
+        if (co && norm(data.couleur) !== co) return false;
+        if (mo && norm(data.modele) !== mo) return false;
+        return true;
       });
+
+      // compteur visible
+      el("countChip").textContent = String(window.__table.getDataCount("active"));
     }
 
     function buildTable(){
@@ -351,8 +399,8 @@
           {
             title:"St",
             field:"__status",
-            width:64,                // ✅ colonne statut ultra réduite
-            headerFilter:false,      // ✅ on enlève le filtre ici (gain d'espace)
+            width:64,
+            headerSort:false,
             responsive:0,
             formatter:(cell)=>{
               const row = cell.getRow().getData();
@@ -369,8 +417,7 @@
             field:"article",
             minWidth:200,
             widthGrow:6,
-            headerFilter:"input",
-            headerFilterFunc:containsFilter,
+            headerSort:true,
             responsive:0,
             formatter:(cell)=>{
               const row = cell.getRow().getData();
@@ -386,14 +433,12 @@
             title:"T",
             field:"taille",
             width:70,
-            headerFilter:false,
             responsive:2
           },
           {
             title:"Coul.",
             field:"couleur",
             width:95,
-            headerFilter:false,
             responsive:3
           },
           {
@@ -401,12 +446,13 @@
             field:"modele",
             minWidth:120,
             widthGrow:2,
-            headerFilter:false,
             responsive:4
           },
         ],
       });
     }
+
+    let __allRows = [];
 
     async function loadData(table){
       clearError();
@@ -419,12 +465,18 @@
 
       if (error) throw error;
 
-      const rows = (data || []).map(r => ({ ...r, __status: computeStatus(r) }));
+      __allRows = (data || []).map(r => ({ ...r, __status: computeStatus(r) }));
 
-      table.setData(rows);
-      el("countChip").textContent = String(rows.length);
+      table.setData(__allRows);
 
-      applyQuickSearch();
+      // Remplir les dropdowns à partir des données
+      fillSelect("fTaille", __allRows.map(x=>x.taille), "Taille: Toutes");
+      fillSelect("fCouleur", __allRows.map(x=>x.couleur), "Couleur: Toutes");
+      fillSelect("fModele", __allRows.map(x=>x.modele), "Modèle: Tous");
+
+      // init count + filtres
+      el("countChip").textContent = String(__allRows.length);
+      applyFilters();
     }
 
     // Actions
@@ -438,12 +490,20 @@
       window.location.href="index.html";
     });
 
-    el("quickSearch").addEventListener("input", ()=>applyQuickSearch());
+    // Events filtres
+    el("quickSearch").addEventListener("input", ()=>applyFilters());
+    el("fStatus").addEventListener("change", ()=>applyFilters());
+    el("fTaille").addEventListener("change", ()=>applyFilters());
+    el("fCouleur").addEventListener("change", ()=>applyFilters());
+    el("fModele").addEventListener("change", ()=>applyFilters());
+
     el("btnReset").addEventListener("click", ()=>{
       el("quickSearch").value = "";
-      window.__table.clearHeaderFilter();
-      window.__table.clearFilter(true);
-      applyQuickSearch();
+      el("fStatus").value = "";
+      el("fTaille").value = "";
+      el("fCouleur").value = "";
+      el("fModele").value = "";
+      applyFilters();
     });
 
     (async function main(){
