@@ -269,7 +269,7 @@
           <div class="panelBody">
             <div class="kvs">
               <div class="kv"><div class="k">Client</div><div class="v" id="v_client">—</div></div>
-              <div class="kv"><div class="k">Date réception</div><div class="v" id="v_date_recept">—</div></div>
+              <div class="kv"><div class="k">Date réception</div><div class="v" id="v_date_recep">—</div></div>
             </div>
           </div>
         </div>
@@ -403,7 +403,7 @@
           prix_ha,
           ca_encaisse,
           client_id,
-          date_recept,
+          date_recep,
 
           prix_en_ligne,
           coef_en_ligne,
@@ -487,7 +487,7 @@
 
       // client
       setText("v_client", row.client_id);
-      setText("v_date_recept", fmtDate(row.date_recept));
+      setText("v_date_recep", fmtDate(row.date_recep));
     }
 
     (async function main(){
