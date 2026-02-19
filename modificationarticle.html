@@ -902,7 +902,7 @@ if (!mode) mode = recordId ? "view" : "new";
       el("id_read").value = p.id;
       el("subtitle").textContent = `${p.numero || "—"} • ${p.article || "—"} • ${p.modele || "—"}`;
 
-      const map = ["numero","article","taille","modele","couleur","date_ha","date_mise_en_ligne","date_vente","qui","prix_ha","ca_encaisse","client_id","date_recep"];
+      const map = ["numero","article","taille","modele","couleur","date_ha","date_mise_en_ligne","date_vente","qui","prix_ha","ca_encaisse","prix_en_ligne","coef_en_ligne","marge_en_ligne","coef_marge","frais_vinted_livraison","client_id","date_recep","marge"];
       map.forEach(k => { if (el(k)) el(k).value = (p[k] ?? ""); });
 
       updateStatus();
