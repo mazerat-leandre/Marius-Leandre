@@ -410,6 +410,12 @@
                 <div class="row"><div class="k">CA encaissé</div><div class="v" id="v_ca_encaisse">—</div></div>
                 <div class="row"><div class="k">Marge dégagée</div><div class="v" id="v_marge">—</div></div>
                 <div class="row"><div class="k">Coef réalisé</div><div class="v" id="v_coef">—</div></div>
+
+                <div class="row"><div class="k">Prix en ligne</div><div class="v" id="v_prix_en_ligne">—</div></div>
+                <div class="row"><div class="k">Coef en ligne</div><div class="v" id="v_coef_en_ligne">—</div></div>
+                <div class="row"><div class="k">Marge en ligne</div><div class="v" id="v_marge_en_ligne">—</div></div>
+                <div class="row"><div class="k">Coef marge</div><div class="v" id="v_coef_marge">—</div></div>
+                <div class="row"><div class="k">Frais Vinted livraison</div><div class="v" id="v_frais_vinted_livraison">—</div></div>
               </div>
             </div>
 
@@ -450,8 +456,8 @@
 
   <script>
     // ======= CONFIG SUPABASE (reprend ton pattern actuel) =======
-    const supabaseUrl = "https://ghgmifhqgqiqignowred.supabase.co";
-    const supabaseKey = "sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
+    const supabaseUrl = "https://ghllylbytcwumeafwzlq.supabase.co";
+    const supabaseKey = "sb_publishable_XXbb1CA2aBT3I3k4mMyeC3UAC8VgEqx";
     const sp = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     // ======= Helpers UI =======
@@ -579,7 +585,7 @@
       // On récupère uniquement ce dont la fiche a besoin
       const { data, error } = await sp
         .from("ListeProduit")
-        .select("id, numero, article, taille, modele, couleur, date_ha, date_mise_en_ligne, date_vente, qui, prix_ha, ca_encaisse, client_id, date_recep")
+        .select("id, numero, article, taille, modele, couleur, date_ha, date_mise_en_ligne, date_vente, qui, prix_ha, ca_encaisse, prix_en_ligne, coef_en_ligne, marge_en_ligne, coef_marge, frais_vinted_livraison, client_id, date_recep")
         .eq("id", recordId)
         .single();
 
@@ -645,6 +651,13 @@
       el("v_ca_encaisse").textContent = fmtEuro(ca);
       el("v_marge").textContent = fmtEuro(marge);
       el("v_coef").textContent = fmtCoef(coef);
+
+      // Champs financiers supplémentaires (Vinted)
+      el("v_prix_en_ligne").textContent = fmtEuro(toNumber(p.prix_en_ligne));
+      el("v_coef_en_ligne").textContent = fmtCoef(toNumber(p.coef_en_ligne));
+      el("v_marge_en_ligne").textContent = fmtEuro(toNumber(p.marge_en_ligne));
+      el("v_coef_marge").textContent = fmtCoef(toNumber(p.coef_marge));
+      el("v_frais_vinted_livraison").textContent = fmtEuro(toNumber(p.frais_vinted_livraison));
 
       // Block 4 (délais)
       const dHA = parseDateSafe(p.date_ha);
