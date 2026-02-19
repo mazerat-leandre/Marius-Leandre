@@ -178,13 +178,12 @@
       font-size:12px !important;
     }
 
-    /* Liens cliquables (pour fiabiliser le clic) */
+    /* Liens cliquables */
     a.cellLink{
       color:inherit;
       text-decoration:none;
       display:inline-flex;
       align-items:center;
-      gap:8px;
       width:100%;
     }
     a.cellLink:hover{
@@ -193,23 +192,26 @@
       text-underline-offset: 2px;
     }
 
-    /* Badge statut */
-    .statusBadge{
+    /* Badge statut compact (mobile-friendly) */
+    .statusMini{
       display:inline-flex;
       align-items:center;
-      padding:4px 10px;
+      justify-content:center;
+      width:34px;            /* ✅ très compact */
+      height:22px;
       border-radius:999px;
       font-weight:900;
-      letter-spacing:.03em;
+      letter-spacing:.02em;
       border:1px solid rgba(255,255,255,.14);
       background:rgba(255,255,255,.06);
-      white-space:nowrap;
+      font-size:11px;        /* ✅ police réduite */
+      line-height:1;
+      flex:0 0 auto;
     }
-    .status-sold{background:rgba(45,212,191,.18); border-color:rgba(45,212,191,.30)}
-    .status-online{background:rgba(124,92,255,.18); border-color:rgba(124,92,255,.30)}
-    .status-stock{background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.16)}
+    .s-sold{background:rgba(45,212,191,.18); border-color:rgba(45,212,191,.30)}
+    .s-online{background:rgba(124,92,255,.18); border-color:rgba(124,92,255,.30)}
+    .s-stock{background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.16)}
 
-    /* Pour éviter que l'article prenne tout */
     .ellipsis{
       overflow:hidden;
       text-overflow:ellipsis;
@@ -301,6 +303,18 @@
       return "EN STOCK";
     }
 
+    function statusShort(full){
+      if (full === "VENDU") return "V";
+      if (full === "EN LIGNE") return "L";
+      return "S"; // EN STOCK
+    }
+
+    function statusClass(full){
+      if (full === "VENDU") return "statusMini s-sold";
+      if (full === "EN LIGNE") return "statusMini s-online";
+      return "statusMini s-stock";
+    }
+
     function containsFilter(headerValue, rowValue){
       const hv = normalizeStr(headerValue);
       if (!hv) return true;
@@ -311,7 +325,7 @@
       if (!window.__table) return;
       const q = normalizeStr(el("quickSearch").value);
 
-      window.__table.clearFilter(true); // keep header filters
+      window.__table.clearFilter(true);
 
       if (!q) return;
 
@@ -328,41 +342,33 @@
 
       return new Tabulator("#table", {
         layout:"fitColumns",
-
-        // ✅ Mobile-friendly : garde Statut + Article, le reste en "collapse"
         responsiveLayout:"collapse",
         responsiveLayoutCollapseStartOpen:false,
-
         height:"680px",
         placeholder:"Aucune donnée",
 
         columns:[
           {
-            title:"Statut",
+            title:"St",
             field:"__status",
-            width:125,
-            headerFilter:"input",
-            headerFilterFunc:containsFilter,
+            width:64,                // ✅ colonne statut ultra réduite
+            headerFilter:false,      // ✅ on enlève le filtre ici (gain d'espace)
             responsive:0,
             formatter:(cell)=>{
               const row = cell.getRow().getData();
               const id = row?.id;
-              const v = cell.getValue();
-              let cls = "statusBadge status-stock";
-              if (v === "VENDU") cls = "statusBadge status-sold";
-              else if (v === "EN LIGNE") cls = "statusBadge status-online";
+              const full = cell.getValue();
               const href = "fichearticle.html?id=" + encodeURIComponent(id);
-              return `<a class="cellLink" href="${href}" title="Ouvrir la fiche">
-                        <span class="${cls}">${v}</span>
+              return `<a class="cellLink" href="${href}" title="${full}">
+                        <span class="${statusClass(full)}">${statusShort(full)}</span>
                       </a>`;
             }
           },
           {
             title:"Article",
             field:"article",
-            // ✅ largeur réaliste (et flexible)
-            minWidth:220,
-            widthGrow:5,
+            minWidth:200,
+            widthGrow:6,
             headerFilter:"input",
             headerFilterFunc:containsFilter,
             responsive:0,
@@ -377,28 +383,25 @@
             }
           },
           {
-            title:"Taille",
+            title:"T",
             field:"taille",
-            width:90,
-            headerFilter:"input",
-            headerFilterFunc:containsFilter,
+            width:70,
+            headerFilter:false,
             responsive:2
           },
           {
-            title:"Couleur",
+            title:"Coul.",
             field:"couleur",
-            width:120,
-            headerFilter:"input",
-            headerFilterFunc:containsFilter,
+            width:95,
+            headerFilter:false,
             responsive:3
           },
           {
-            title:"Modèle",
+            title:"Mod.",
             field:"modele",
-            minWidth:140,
+            minWidth:120,
             widthGrow:2,
-            headerFilter:"input",
-            headerFilterFunc:containsFilter,
+            headerFilter:false,
             responsive:4
           },
         ],
