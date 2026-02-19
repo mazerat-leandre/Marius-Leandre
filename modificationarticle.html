@@ -355,6 +355,11 @@
             <div class="kv">
               <div class="field"><div class="k">Prix HA</div><input type="number" step="0.01" id="prix_ha"></div>
               <div class="field"><div class="k">CA encaissé</div><input type="number" step="0.01" id="ca_encaisse"></div>
+              <div class="field"><div class="k">Prix en ligne</div><input type="number" step="0.01" id="prix_en_ligne"></div>
+              <div class="field"><div class="k">Coef en ligne</div><input type="number" step="0.01" id="coef_en_ligne"></div>
+              <div class="field"><div class="k">Marge en ligne</div><input type="number" step="0.01" id="marge_en_ligne"></div>
+              <div class="field"><div class="k">Coef marge</div><input type="number" step="0.01" id="coef_marge"></div>
+              <div class="field"><div class="k">Frais Vinted + livraison</div><input type="number" step="0.01" id="frais_vinted_livraison"></div>
               <div class="field" style="grid-column:1/-1">
                 <div class="k">Calculs</div>
                 <div class="calc" id="calc_financier">
@@ -686,7 +691,14 @@
       el("id_read").value = p.id;
       el("subtitle").textContent = `${p.numero || "—"} • ${p.article || "—"} • ${p.modele || "—"}`;
 
-      const map = ["numero","article","taille","modele","couleur","date_ha","date_mise_en_ligne","date_vente","qui","prix_ha","ca_encaisse","client_id","date_recep"];
+const map = [
+  "numero","article","taille","modele","couleur",
+  "date_ha","date_mise_en_ligne","date_vente",
+  "qui",
+  "prix_ha","ca_encaisse",
+  "prix_en_ligne","coef_en_ligne","marge_en_ligne","coef_marge","frais_vinted_livraison",
+  "client_id","date_recep"
+];
       map.forEach(k => { if (el(k)) el(k).value = (p[k] ?? ""); });
 
       updateStatus();
@@ -710,6 +722,12 @@
         ca_encaisse: el("ca_encaisse").value === "" ? null : Number(el("ca_encaisse").value),
         client_id: el("client_id").value,
         date_recep: el("date_recep").value || null
+        prix_en_ligne: el("prix_en_ligne").value === "" ? null : Number(el("prix_en_ligne").value),
+        coef_en_ligne: el("coef_en_ligne").value === "" ? null : Number(el("coef_en_ligne").value),
+        marge_en_ligne: el("marge_en_ligne").value === "" ? null : Number(el("marge_en_ligne").value),
+        coef_marge: el("coef_marge").value === "" ? null : Number(el("coef_marge").value),
+        frais_vinted_livraison: el("frais_vinted_livraison").value === "" ? null : Number(el("frais_vinted_livraison").value),
+
       };
 
       const r = await sb.from("ListeProduit").update(payload).eq("id", Number(recordId));
