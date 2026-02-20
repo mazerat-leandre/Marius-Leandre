@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Accueil</title>
+
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#0b1220;
+  --panel:rgba(255,255,255,.06);
+  --border:rgba(255,255,255,.12);
+  --text:rgba(255,255,255,.92);
+  --muted:rgba(255,255,255,.65);
+  --accent:#7c5cff;
+  --danger:#ff4d6d;
+  --shadow:0 18px 60px rgba(0,0,0,.45);
+  --radius:20px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,sans-serif;
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(124,92,255,.35), transparent 55%),
+    radial-gradient(900px 500px at 95% 0%, rgba(33,212,253,.22), transparent 55%),
+    var(--bg);
+}
+
+.container{
+  width:100%;
+  max-width:420px;
+  padding:20px;
+}
+
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:30px 25px;
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(12px);
+}
+
+h1{
+  margin:0 0 10px 0;
+  font-size:22px;
+  font-weight:800;
+  text-align:center;
+}
+
+.subtitle{
+  text-align:center;
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:25px;
+}
+
+.field{
+  display:flex;
+  flex-direction:column;
+  margin-bottom:15px;
+}
+
+label{
+  font-size:11px;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:6px;
+  font-weight:700;
+}
+
+input{
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.08);
+  color:white;
+  font-weight:600;
+}
+
+input:focus{
+  outline:none;
+  border-color:var(--accent);
+}
+
+.btn{
+  width:100%;
+  padding:12px;
+  border-radius:14px;
+  border:none;
+  background:var(--accent);
+  color:white;
+  font-weight:700;
+  cursor:pointer;
+  margin-top:10px;
+}
+
+.btn.secondary{
+  background:rgba(255,255,255,.08);
+  border:1px solid var(--border);
+}
+
+.menuBtn{
+  display:block;
+  width:100%;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.08);
+  color:white;
+  font-weight:700;
+  margin-bottom:12px;
+  text-align:center;
+  cursor:pointer;
+}
+
+.userBadge{
+  text-align:center;
+  margin-bottom:20px;
+  font-size:13px;
+  font-weight:700;
+  color:var(--muted);
+}
+
+</style>
+</head>
+
+<body>
+<!-- ENV SWITCH (auto-added) -->
+<div style="position:fixed;top:12px;right:12px;z-index:9999;display:flex;gap:8px;align-items:center;">
+  <div style="padding:6px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.35);color:#fff;font:700 12px/1.2 Inter,Arial,sans-serif;">
+    ENV : TEST
+  </div>
+  <button type="button"
+    onclick="window.location.href='../index.html';"
+    style="padding:6px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);color:#fff;font:800 12px/1.2 Inter,Arial,sans-serif;cursor:pointer;">
+    Changer
+  </button>
+</div>
+
+
+<div class="container">
+
+<div class="card" id="loginCard">
+  <h1>Connexion</h1>
+  <div class="subtitle">Accès à la gestion des articles</div>
+
+  <div class="field">
+    <label>Email</label>
+    <input type="email" id="email">
+  </div>
+
+  <div class="field">
+    <label>Mot de passe</label>
+    <input type="password" id="password">
+  </div>
+
+  <button class="btn" id="loginBtn">Se connecter</button>
+</div>
+
+<div class="card" id="menuCard" style="display:none">
+  <h1>Tableau de bord</h1>
+  <div class="userBadge" id="userInfo"></div>
+
+  <div class="menuBtn" onclick="window.location='articles.html'">
+    📦 Liste des articles
+  </div>
+
+  <div class="menuBtn" onclick="window.location='admin.html'">
+    ➕ Ajouter un article
+  </div>
+
+  <button class="btn secondary" id="logoutBtn">
+    Déconnexion
+  </button>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+
+const supabaseUrl="https://ghgmifhqgqiqignowred.supabase.co";
+const supabaseKey="sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
+const sb=window.supabase.createClient(supabaseUrl,supabaseKey);
+
+const loginCard=document.getElementById("loginCard");
+const menuCard=document.getElementById("menuCard");
+const userInfo=document.getElementById("userInfo");
+
+async function checkSession(){
+  const {data}=await sb.auth.getSession();
+  if(data.session){
+    showMenu(data.session.user.email);
+  }else{
+    showLogin();
+  }
+}
+
+function showLogin(){
+  loginCard.style.display="block";
+  menuCard.style.display="none";
+}
+
+function showMenu(email){
+  loginCard.style.display="none";
+  menuCard.style.display="block";
+  userInfo.textContent="Connecté : "+email;
+}
+
+document.getElementById("loginBtn").addEventListener("click", async()=>{
+  const email=document.getElementById("email").value;
+  const password=document.getElementById("password").value;
+
+  const {error}=await sb.auth.signInWithPassword({email,password});
+  if(error){
+    alert(error.message);
+  }else{
+    checkSession();
+  }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", async()=>{
+  await sb.auth.signOut();
+  showLogin();
+});
+
+checkSession();
+
+</script>
+
+</body>
+</html>

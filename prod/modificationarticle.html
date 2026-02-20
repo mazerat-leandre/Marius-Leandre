@@ -1,0 +1,1161 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Modification article</title>
+
+  <!-- (Optionnel mais recommandé contre le cache HTML) -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:rgba(255,255,255,.06);
+      --panel2:rgba(255,255,255,.085);
+      --border:rgba(255,255,255,.12);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.65);
+      --muted2:rgba(255,255,255,.52);
+      --accent:#7c5cff;
+      --danger:#ff4d6d;
+      --ok:#2dd4bf;
+      --shadow:0 18px 60px rgba(0,0,0,.45);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(124,92,255,.35), transparent 55%),
+        radial-gradient(900px 500px at 95% 0%, rgba(33,212,253,.22), transparent 55%),
+        radial-gradient(800px 500px at 60% 120%, rgba(45,212,191,.18), transparent 55%),
+        var(--bg);
+      min-height:100vh;
+    }
+    .wrap{max-width:1150px;margin:0 auto;padding:28px 18px 60px}
+    .topbar{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+    .title{display:flex; flex-direction:column; gap:8px}
+    .title h1{margin:0; font-size:20px; font-weight:800; letter-spacing:.2px}
+    .subtitle{font-size:13px; color:var(--muted)}
+    .badges{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      padding:6px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.08);
+      color:var(--text);
+      letter-spacing:.04em;
+    }
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:flex-start;
+      justify-content:flex-end;
+    }
+    .miniStats{
+      text-align:right;
+      font-size:13px;
+      font-weight:800;
+      color:var(--text);
+      line-height:1.35;
+      padding:6px 10px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      min-width: 220px;
+    }
+    .miniStats .m{color:var(--muted); font-weight:800}
+    .btn{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+      transition: transform .08s ease, background .15s ease, border-color .15s ease;
+      backdrop-filter: blur(10px);
+    }
+    .btn:hover{background:rgba(255,255,255,.10); border-color:rgba(255,255,255,.18)}
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{border-color:rgba(124,92,255,.45); background: linear-gradient(135deg, rgba(124,92,255,.35), rgba(33,212,253,.14))}
+    .btn.danger{border-color:rgba(255,77,109,.45); background:rgba(255,77,109,.12)}
+    .grid{display:grid; grid-template-columns:1.15fr .85fr; gap:16px; align-items:start}
+    @media(max-width:980px){.grid{grid-template-columns:1fr}}
+    .panel{
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      backdrop-filter: blur(12px);
+    }
+    .panelHeader{
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,.03);
+    }
+    .panelHeader .h{font-weight:900; font-size:14px}
+    .panelHeader .chip{
+      font-size:12px; padding:6px 10px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.05);
+      color:var(--muted);
+      font-weight:800;
+    }
+
+    /* Gallery */
+    .gallery{padding:14px}
+    .hero{
+      position:relative;
+      width:100%;
+      aspect-ratio:4/3;
+      border-radius:16px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04);
+      display:flex; align-items:center; justify-content:center;
+    }
+    .hero img{width:100%; height:100%; object-fit:cover; display:block}
+    .hero .placeholder{
+      color:var(--muted2); font-weight:800; font-size:13px; text-align:center; padding:10px
+    }
+    .thumbs{display:flex; gap:10px; margin-top:12px; overflow:auto; padding-bottom:2px}
+    .thumb{
+      flex:0 0 auto;
+      width:76px; height:58px;
+      border-radius:12px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04);
+      cursor:pointer;
+      position:relative;
+      transition: transform .08s ease, border-color .15s ease;
+    }
+    .thumb:hover{border-color:rgba(255,255,255,.22)}
+    .thumb:active{transform:translateY(1px)}
+    .thumb.active{
+      border-color: rgba(124,92,255,.65);
+      box-shadow: 0 0 0 3px rgba(124,92,255,.15);
+    }
+    .thumb img{width:100%; height:100%; object-fit:cover; display:block}
+
+    /* Buttons overlay on thumbs */
+    .thumb .del, .thumb .main{
+      position:absolute;
+      top:6px;
+      width:24px;
+      height:24px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      color:#fff;
+      font-weight:900;
+      cursor:pointer;
+      z-index:10;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow: 0 10px 20px rgba(0,0,0,.35);
+      user-select:none;
+    }
+    .thumb .del{ right:6px; background: rgba(255,77,109,.92); }
+    .thumb .main{ left:6px; background: rgba(124,92,255,.95); }
+    .thumb .del:hover, .thumb .main:hover{filter:brightness(1.05)}
+    .thumb .del:active, .thumb .main:active{transform:translateY(1px)}
+    .thumb .crown{
+      position:absolute;
+      bottom:6px;
+      left:6px;
+      padding:3px 8px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:900;
+      background: rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.14);
+      color: rgba(255,255,255,.92);
+      backdrop-filter: blur(6px);
+    }
+
+    .uploadBox{
+      margin-top:14px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      padding:12px;
+      border-radius:16px;
+      border:1px dashed rgba(255,255,255,.18);
+      background:rgba(255,255,255,.03);
+    }
+    .uploadBox label{
+      font-size:12px; color:var(--muted); font-weight:800;
+    }
+    .uploadBox input[type=file]{color:var(--muted);}
+
+    /* Cards */
+    .cards{padding:14px; display:grid; gap:14px}
+    .card{
+      padding: 14px 16px 16px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 18px;
+    }
+    .cardTitle{
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:10px;
+      gap:12px;
+    }
+    .cardTitle span{font-weight:900; font-size:13px; letter-spacing:.25px}
+    .cardTitle small{color:var(--muted2); font-weight:800; font-size:12px}
+
+    .kv{display:grid; grid-template-columns:1fr 1fr; gap:10px 14px}
+    @media(max-width:520px){.kv{grid-template-columns:1fr}}
+    .field{
+      display:flex; flex-direction:column; gap:6px;
+      padding:10px 10px;
+      border-radius:14px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.07);
+    }
+    .field .k{
+      font-size:11px;
+      color:var(--muted2);
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+    .field input{
+      width:100%;
+      padding:10px 10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.08);
+      color:var(--text);
+      font-weight:800;
+    }
+    .field input:focus{outline:none; border-color:rgba(124,92,255,.55)}
+    .calc{
+      font-weight:900;
+      color:var(--text);
+      line-height:1.55;
+    }
+    .calc .muted{color:var(--muted)}
+
+    .note{
+      margin-top:12px;
+      color:var(--muted2);
+      font-size:12px;
+      line-height:1.4;
+    }
+  </style>
+</head>
+
+<body>
+<!-- ENV SWITCH (auto-added) -->
+<div style="position:fixed;top:12px;right:12px;z-index:9999;display:flex;gap:8px;align-items:center;">
+  <div style="padding:6px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.35);color:#fff;font:700 12px/1.2 Inter,Arial,sans-serif;">
+    ENV : PROD
+  </div>
+  <button type="button"
+    onclick="window.location.href='../index.html';"
+    style="padding:6px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);color:#fff;font:800 12px/1.2 Inter,Arial,sans-serif;cursor:pointer;">
+    Changer
+  </button>
+</div>
+
+  <div class="wrap">
+    <div class="topbar">
+      <div class="title">
+        <h1>Modification article</h1>
+        <div class="subtitle" id="subtitle">—</div>
+        <div class="badges">
+          <div class="badge" id="statusBadge">—</div>
+          <div class="badge" id="unsavedBadge" style="display:none; border-color:rgba(255,255,255,.2); background:rgba(255,255,255,.08);">Modifications non enregistrées</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <div class="miniStats" id="miniStats">
+          <div><span class="m">Marge :</span> —</div>
+          <div><span class="m">Délai achat→vente :</span> —</div>
+        </div>
+        <button class="btn primary" id="saveBtn">Enregistrer</button>
+        <button class="btn" id="toggleModeBtn">Lecture</button>
+        <button class="btn" id="duplicateBtn">Dupliquer</button>
+        <button class="btn" id="backBtn">Retour</button>
+        <button class="btn danger" id="deleteBtn">Supprimer l'article</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Photos -->
+      <div class="panel">
+        <div class="panelHeader">
+          <div class="h">Photos</div>
+          <div class="chip" id="photoCount">0</div>
+        </div>
+
+        <div class="gallery">
+          <div class="hero" id="hero"><div class="placeholder">Aucune photo</div></div>
+          <div class="thumbs" id="thumbs" style="display:none"></div>
+
+          <div class="uploadBox">
+            <label for="photoInput">Ajouter une photo</label>
+            <input type="file" id="photoInput" accept="image/*">
+          </div>
+
+          <div class="note">
+            ★ définit la photo principale. × supprime la photo.
+          </div>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <div class="panel">
+        <div class="panelHeader">
+          <div class="h">Informations</div>
+          <div class="chip" id="chipId">ID —</div>
+        </div>
+
+        <div class="cards">
+          <div class="card">
+            <div class="cardTitle"><span>Identité produit</span><small>Bloc 1</small></div>
+            <div class="kv">
+              <div class="field"><div class="k">Numéro</div><input id="numero"></div>
+              <div class="field"><div class="k">Article</div><input id="article"></div>
+              <div class="field"><div class="k">Taille</div><input id="taille"></div>
+              <div class="field"><div class="k">Modèle</div><input id="modele"></div>
+              <div class="field"><div class="k">Couleur</div><input id="couleur"></div>
+              <div class="field"><div class="k">Qui</div><input id="qui"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="cardTitle"><span>Dates & suivi</span><small>Bloc 2</small></div>
+            <div class="kv">
+              <div class="field"><div class="k">Date HA</div><input type="date" id="date_ha"></div>
+              <div class="field"><div class="k">Date mise en ligne</div><input type="date" id="date_mise_en_ligne"></div>
+              <div class="field"><div class="k">Date vente</div><input type="date" id="date_vente"></div>
+              <div class="field"><div class="k">Date réception</div><input type="date" id="date_recep"></div>
+              <div class="field"><div class="k">Client</div><input id="client_id"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="cardTitle"><span>Financier</span><small>Bloc 3</small></div>
+            <div class="kv">
+              <div class="field"><div class="k">Prix HA</div><input type="number" step="0.01" id="prix_ha"></div>
+              <div class="field"><div class="k">CA encaissé</div><input type="number" step="0.01" id="ca_encaisse"></div>
+
+              <div class="field"><div class="k">Prix en ligne</div><input type="number" step="0.01" id="prix_en_ligne"></div>
+              <div class="field"><div class="k">Coef en ligne</div><input type="number" step="0.01" id="coef_en_ligne"></div>
+              <div class="field"><div class="k">Marge en ligne</div><input type="number" step="0.01" id="marge_en_ligne"></div>
+
+              <div class="field"><div class="k">Coef marge</div><input type="number" step="0.01" id="coef_marge" disabled title="Calculé automatiquement : CA encaissé / Prix HA"></div>
+              <div class="field"><div class="k">Frais Vinted + livraison</div><input type="number" step="0.01" id="frais_vinted_livraison"></div>
+
+              <div class="field" style="grid-column:1/-1">
+                <div class="k">Calculs</div>
+                <div class="calc" id="calc_financier">
+                  <span class="muted">Marge :</span> — &nbsp; • &nbsp;
+                  <span class="muted">Coef :</span> —
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="cardTitle"><span>Délais (auto)</span><small>Bloc 4</small></div>
+            <div class="kv">
+              <div class="field"><div class="k">Délai mise en ligne</div><div class="calc" id="d_mise">—</div></div>
+              <div class="field"><div class="k">Délai vente</div><div class="calc" id="d_vente">—</div></div>
+              <div class="field"><div class="k">Délai achat → revente</div><div class="calc" id="d_ar">—</div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="cardTitle"><span>Infos techniques</span><small>Bloc 5</small></div>
+            <div class="kv">
+              <div class="field"><div class="k">ID (lecture)</div><input id="id_read" disabled></div>
+              <div class="field"><div class="k">Dernière action</div><input id="last_action" disabled value="—"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // IMPORTANT : mêmes valeurs que tes autres pages
+    const supabaseUrl = "https://ghgmifhqgqiqignowred.supabase.co";
+    const supabaseKey = "sb_publishable_8D7_EGFMvtFPMuYWgmlyvw_iX8Pf28V";
+    const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    const __params = new URLSearchParams(location.search);
+let recordId = __params.get("id");
+if (recordId === "undefined" || recordId === "null") recordId = null;
+let mode = __params.get("mode");
+
+    let currentProduct = null;
+// modes: view | edit | new
+if (!mode) mode = recordId ? "view" : "new";
+
+
+    const el = (id) => document.getElementById(id);
+    const setLast = (txt) => el("last_action").value = txt;
+
+    // ===== Mode handling (single page: view / edit / new) =====
+    const ALWAYS_DISABLED = new Set(["id_read","last_action","coef_marge"]);
+    function setMode(newMode){
+      mode = newMode;
+      __params.set("mode", mode);
+
+      // Update URL (without reloading)
+      const qs = __params.toString();
+      history.replaceState(null, "", location.pathname + (qs ? ("?" + qs) : ""));
+
+      applyModeUI();
+    }
+
+    function applyModeUI(){
+      const isView = (mode === "view");
+      const isNew = (mode === "new");
+      const isEdit = (mode === "edit");
+
+      // Title + chips
+      if (!recordId){
+        el("chipId").textContent = "ID —";
+        el("id_read").value = "";
+      }
+
+      // Buttons visibility
+      el("saveBtn").style.display = (isView ? "none" : "inline-flex");
+      el("deleteBtn").style.display = (recordId && !isView ? "inline-flex" : "none");
+      el("duplicateBtn").style.display = (recordId && isView ? "inline-flex" : "none");
+
+      // Toggle button text
+      if (isView) el("toggleModeBtn").textContent = "Modifier";
+      else el("toggleModeBtn").textContent = "Lecture";
+
+      // Inputs enabled/disabled
+      document.querySelectorAll("input").forEach(inp => {
+        if (ALWAYS_DISABLED.has(inp.id)) return; // keep disabled
+        // Special case: photo input handled below
+        if (inp.id === "photoInput") return;
+        inp.disabled = isView;
+      });
+
+      // Photo input
+      const photoInput = el("photoInput");
+      photoInput.disabled = isView || !recordId;
+
+      // Unsaved badge: never show in view mode
+      if (isView) setDirty(false);
+
+      // If new mode: hide delete, disable photo upload until created
+      if (isNew){
+        el("deleteBtn").style.display = "none";
+        photoInput.disabled = true;
+      }
+    }
+
+    function initNewForm(){
+      // reset inputs (except read-only)
+      const ids = [
+        "numero","article","taille","modele","couleur","qui",
+        "date_ha","date_mise_en_ligne","date_vente","date_recep","client_id",
+        "prix_ha","ca_encaisse","marge","prix_en_ligne","coef_en_ligne","marge_en_ligne","frais_vinted_livraison"
+      ];
+      ids.forEach(id => { if (el(id)) el(id).value = ""; });
+
+      // coef_marge is calculated field (disabled)
+      if (el("coef_marge")) el("coef_marge").value = "0.00";
+
+      el("chipId").textContent = "Nouveau";
+      el("subtitle").textContent = "Création d'un article";
+      updateStatus();
+      calcFinancier();
+      calcDelais();
+      updateMiniStats();
+
+      // Photos UI reset
+      photos = [];
+      activeIndex = 0;
+      el("photoCount").textContent = "0";
+      el("thumbs").style.display = "none";
+      setHero(null);
+
+      setLast("Nouveau (non enregistré)");
+      setDirty(false);
+    }
+
+    // ===== Unsaved changes guard =====
+    let hasChanges = false;
+    function setDirty(on){
+      hasChanges = on;
+      el("unsavedBadge").style.display = hasChanges ? "inline-flex" : "none";
+    }
+    window.addEventListener("beforeunload", (e) => {
+      if (!hasChanges) return;
+      e.preventDefault();
+      e.returnValue = "";
+    });
+
+    function toNumber(v){ const n = Number(v); return Number.isFinite(n) ? n : 0; }
+    function parseDateSafe(v){
+      if (!v) return null;
+      const d = new Date(v);
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+    function diffDays(a,b){
+      if (!a || !b) return null;
+      return Math.round((b.getTime()-a.getTime())/(1000*60*60*24));
+    }
+    function fmtDays(d){ return d==null ? "—" : `${d} jour${Math.abs(d)>1?"s":""}`; }
+
+    async function requireSession(){
+      const { data, error } = await sb.auth.getSession();
+      if (error || !data?.session) location.href = "index.html";
+    }
+
+    // ===== Status badge =====
+    function updateStatus(){
+      const dV = el("date_vente").value;
+      const dMEL = el("date_mise_en_ligne").value;
+      const badge = el("statusBadge");
+
+      if (dV){
+        badge.textContent = "VENDU";
+        badge.style.background = "rgba(45,212,191,.22)";
+        badge.style.borderColor = "rgba(45,212,191,.35)";
+      } else if (dMEL){
+        badge.textContent = "EN LIGNE";
+        badge.style.background = "rgba(124,92,255,.25)";
+        badge.style.borderColor = "rgba(124,92,255,.40)";
+      } else {
+        badge.textContent = "EN STOCK";
+        badge.style.background = "rgba(255,255,255,.10)";
+        badge.style.borderColor = "rgba(255,255,255,.16)";
+      }
+    }
+
+    // ===== Calculs =====
+        function calcFinancier(){
+      const prix = toNumber(el("prix_ha").value);
+      const ca = toNumber(el("ca_encaisse").value);
+
+      // Marge dégagée: si CA encaissé > 0 alors CA - PrixHA sinon 0
+      const marge = (ca > 0) ? (ca - prix) : 0;
+
+      // Coef marge: CA / PrixHA si possible sinon 0
+      const coef = (prix > 0 && ca > 0) ? (ca / prix) : 0;
+
+      // Champ coef_marge (désactivé) = coef calculé
+      if (el("coef_marge")) el("coef_marge").value = coef.toFixed(2);
+
+      el("calc_financier").innerHTML =
+        `<span class="muted">Marge :</span> ${marge.toFixed(2)} € &nbsp; • &nbsp; <span class="muted">Coef :</span> ${coef.toFixed(2)}`;
+    }
+
+    function calcDelais(){
+      const dHA = parseDateSafe(el("date_ha").value);
+      const dMEL = parseDateSafe(el("date_mise_en_ligne").value);
+      const dV = parseDateSafe(el("date_vente").value);
+
+      el("d_mise").textContent = fmtDays((dHA && dMEL) ? diffDays(dHA, dMEL) : null);
+      el("d_vente").textContent = fmtDays((dMEL && dV) ? diffDays(dMEL, dV) : null);
+      el("d_ar").textContent = fmtDays((dHA && dV) ? diffDays(dHA, dV) : null);
+    }
+
+        function updateMiniStats(){
+      const prix = toNumber(el("prix_ha").value);
+      const ca = toNumber(el("ca_encaisse").value);
+
+      // Marge dégagée: si CA encaissé > 0 alors CA - PrixHA sinon 0
+      const marge = (ca > 0) ? (ca - prix) : 0;
+
+      const dHA = parseDateSafe(el("date_ha").value);
+      const dV = parseDateSafe(el("date_vente").value);
+      const delai = (dHA && dV) ? diffDays(dHA, dV) : null;
+
+      el("miniStats").innerHTML =
+        `<div><span class="m">Marge :</span> ${marge.toFixed(2)} €</div>` +
+        `<div><span class="m">Délai achat→vente :</span> ${delai == null ? "—" : (delai + " j")}</div>`;
+    }
+
+    function wireDirtyTracking(){
+      // Dès qu'on modifie un champ => dirty
+      document.querySelectorAll("input").forEach(inp => {
+        if (inp.disabled) return;
+        inp.addEventListener("input", () => setDirty(true));
+      });
+    }
+
+    // ===== Recalcul automatique "en ligne" (prix_en_ligne / coef_en_ligne / marge_en_ligne) =====
+    let __syncLine = false;
+    let __lastLineEdited = null; // "prix" | "coef" | "marge"
+
+    function numOrNull(id){
+      const v = el(id)?.value;
+      if (v === "" || v === null || v === undefined) return null;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function setNum(id, value){
+      if (!el(id)) return;
+      if (value === null || value === undefined || !Number.isFinite(value)){
+        el(id).value = "";
+        return;
+      }
+      el(id).value = value.toFixed(2);
+    }
+
+    function recomputeFromPrixEnLigne(){
+      const prixHA = toNumber(el("prix_ha").value);
+      const prixL = numOrNull("prix_en_ligne");
+      if (prixL === null) return;
+
+      const coefL = (prixHA > 0) ? (prixL / prixHA) : 0;
+      const margeL = prixL - prixHA;
+
+      __syncLine = true;
+      setNum("coef_en_ligne", coefL);
+      setNum("marge_en_ligne", margeL);
+      __syncLine = false;
+    }
+
+    function recomputeFromCoefEnLigne(){
+      const prixHA = toNumber(el("prix_ha").value);
+      const coefL = numOrNull("coef_en_ligne");
+      if (coefL === null) return;
+
+      const prixL = prixHA * coefL;
+      const margeL = prixL - prixHA; // cohérent : marge = prix - prixHA
+
+      __syncLine = true;
+      setNum("prix_en_ligne", prixL);
+      setNum("marge_en_ligne", margeL);
+      __syncLine = false;
+    }
+
+    function recomputeFromMargeEnLigne(){
+      const prixHA = toNumber(el("prix_ha").value);
+      const margeL = numOrNull("marge_en_ligne");
+      if (margeL === null) return;
+
+      const prixL = prixHA + margeL;
+      const coefL = (prixHA > 0) ? ((margeL / prixHA) + 1) : 0;
+
+      __syncLine = true;
+      setNum("prix_en_ligne", prixL);
+      setNum("coef_en_ligne", coefL);
+      __syncLine = false;
+    }
+
+    function recomputeLineOnPrixHAChange(){
+      if (__lastLineEdited === "prix") return recomputeFromPrixEnLigne();
+      if (__lastLineEdited === "coef") return recomputeFromCoefEnLigne();
+      if (__lastLineEdited === "marge") return recomputeFromMargeEnLigne();
+
+      // fallback
+      if (el("prix_en_ligne")?.value) return recomputeFromPrixEnLigne();
+      if (el("coef_en_ligne")?.value) return recomputeFromCoefEnLigne();
+      if (el("marge_en_ligne")?.value) return recomputeFromMargeEnLigne();
+    }
+
+    function wireLineRecalcs(){
+      if (el("prix_en_ligne")){
+        el("prix_en_ligne").addEventListener("input", () => {
+          if (__syncLine) return;
+          __lastLineEdited = "prix";
+          recomputeFromPrixEnLigne();
+        });
+      }
+      if (el("coef_en_ligne")){
+        el("coef_en_ligne").addEventListener("input", () => {
+          if (__syncLine) return;
+          __lastLineEdited = "coef";
+          recomputeFromCoefEnLigne();
+        });
+      }
+      if (el("marge_en_ligne")){
+        el("marge_en_ligne").addEventListener("input", () => {
+          if (__syncLine) return;
+          __lastLineEdited = "marge";
+          recomputeFromMargeEnLigne();
+        });
+      }
+      if (el("prix_ha")){
+        el("prix_ha").addEventListener("input", () => {
+          if (__syncLine) return;
+          recomputeLineOnPrixHAChange();
+        });
+      }
+    }
+    // ===== Fin recalcul "en ligne" =====
+
+
+    // ===== Photos state =====
+    let photos = [];
+    let activeIndex = 0;
+    function safeUrl(p){ return p && typeof p.signedUrl === "string" && p.signedUrl.trim() !== "" ? p.signedUrl : null; }
+
+    function setHero(url){
+      const hero = el("hero");
+      hero.innerHTML = "";
+      if (!url){
+        const ph = document.createElement("div");
+        ph.className = "placeholder";
+        ph.textContent = "Aucune photo";
+        hero.appendChild(ph);
+        return;
+      }
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = "Photo";
+      hero.appendChild(img);
+    }
+
+    async function ensureMainAfterDeletion(articleId){
+      // S'il n'y a plus de photo principale mais qu'il reste des photos => en définir une
+      const r = await sb.from("article_photos")
+        .select("id, is_main, sort_order")
+        .eq("article_id", articleId)
+        .order("sort_order", { ascending: true })
+        .order("id", { ascending: true });
+
+      if (r.error) return;
+
+      const rows = r.data || [];
+      if (!rows.length) return;
+
+      const hasMain = rows.some(x => x.is_main === true);
+      if (hasMain) return;
+
+      // Définir la première comme principale
+      await sb.from("article_photos").update({ is_main: true }).eq("id", rows[0].id);
+    }
+
+    async function setMainPhoto(photoId){
+      // 1) reset toutes les photos de l'article
+      const r1 = await sb.from("article_photos").update({ is_main: false }).eq("article_id", Number(recordId));
+      if (r1.error){
+        alert("Impossible de réinitialiser les photos : " + r1.error.message);
+        return;
+      }
+      // 2) set main
+      const r2 = await sb.from("article_photos").update({ is_main: true }).eq("id", photoId);
+      if (r2.error){
+        alert("Impossible de définir la principale : " + r2.error.message);
+        return;
+      }
+      setLast("Photo principale mise à jour");
+      await loadPhotos();
+    }
+
+    async function deletePhoto(p){
+      if (!confirm("Supprimer cette photo ?")) return;
+
+      const r1 = await sb.storage.from("Article-photos").remove([p.path]);
+      if (r1.error){
+        alert("Suppression storage impossible : " + r1.error.message);
+        return;
+      }
+
+      const r2 = await sb.from("article_photos").delete().eq("id", p.id);
+      if (r2.error){
+        alert("Suppression DB impossible : " + r2.error.message);
+        return;
+      }
+
+      await ensureMainAfterDeletion(Number(recordId));
+      setLast("Photo supprimée");
+      await loadPhotos();
+    }
+
+    function renderThumbs(){
+      const thumbs = el("thumbs");
+      el("photoCount").textContent = String(photos.length);
+
+      if (!photos.length){
+        thumbs.style.display = "none";
+        setHero(null);
+        return;
+      }
+
+      thumbs.style.display = "flex";
+      thumbs.innerHTML = "";
+
+      if (activeIndex < 0 || activeIndex >= photos.length) activeIndex = 0;
+
+      photos.forEach((p, idx) => {
+        const d = document.createElement("div");
+        d.className = "thumb" + (idx === activeIndex ? " active" : "");
+
+        const img = document.createElement("img");
+        img.src = safeUrl(p) || "";
+        d.appendChild(img);
+
+        // ★ principale
+        const mainBtn = document.createElement("button");
+        mainBtn.className = "main";
+        mainBtn.type = "button";
+        mainBtn.textContent = "★";
+        mainBtn.title = "Définir comme principale";
+        mainBtn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          await setMainPhoto(p.id);
+        });
+        d.appendChild(mainBtn);
+
+        // × supprimer
+        const del = document.createElement("button");
+        del.className = "del";
+        del.type = "button";
+        del.textContent = "×";
+        del.title = "Supprimer la photo";
+        del.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          await deletePhoto(p);
+        });
+        d.appendChild(del);
+
+        // Indicateur "Principale"
+        if (p.is_main === true){
+          const crown = document.createElement("div");
+          crown.className = "crown";
+          crown.textContent = "Principale";
+          d.appendChild(crown);
+        }
+
+        d.addEventListener("click", () => {
+          activeIndex = idx;
+          setHero(safeUrl(photos[activeIndex]));
+          renderThumbs();
+        });
+
+        thumbs.appendChild(d);
+      });
+
+      setHero(safeUrl(photos[activeIndex]));
+    }
+
+    async function loadPhotos(){
+      if (!recordId) { photos = []; renderThumbs(); return; }
+
+      const r = await sb.from("article_photos")
+        .select("id, path, is_main, sort_order")
+        .eq("article_id", Number(recordId))
+        .order("is_main", { ascending: false })
+        .order("sort_order", { ascending: true })
+        .order("id", { ascending: true });
+
+      if (r.error){
+        console.error(r.error);
+        alert("Erreur chargement photos : " + r.error.message);
+        photos = [];
+        renderThumbs();
+        return;
+      }
+
+      const rows = r.data || [];
+      const out = [];
+
+      for (const p of rows){
+        const s = await sb.storage.from("Article-photos").createSignedUrl(p.path, 3600);
+        out.push({ ...p, signedUrl: (!s.error && s.data?.signedUrl) ? s.data.signedUrl : "" });
+      }
+
+      photos = out;
+
+      const mainIdx = photos.findIndex(x => x.is_main === true);
+      activeIndex = mainIdx >= 0 ? mainIdx : 0;
+
+      renderThumbs();
+    }
+
+    // ===== Article load/save =====
+    async function loadProduct(){
+      if (!recordId) { initNewForm(); return; }
+
+      const r = await sb.from("ListeProduit").select("*").eq("id", Number(recordId)).single();
+      if (r.error){
+        console.error(r.error);
+        alert("Erreur chargement article : " + r.error.message);
+        location.href = "articles.html";
+        return;
+      }
+
+      const p = r.data;
+
+      currentProduct = p;
+
+      el("chipId").textContent = "ID " + p.id;
+      el("id_read").value = p.id;
+      el("subtitle").textContent = `${p.numero || "—"} • ${p.article || "—"} • ${p.modele || "—"}`;
+
+      const map = ["numero","article","taille","modele","couleur","date_ha","date_mise_en_ligne","date_vente","qui","prix_ha","ca_encaisse","prix_en_ligne","coef_en_ligne","marge_en_ligne","coef_marge","frais_vinted_livraison","client_id","date_recep","marge"];
+      map.forEach(k => { if (el(k)) el(k).value = (p[k] ?? ""); });
+
+      updateStatus();
+      calcFinancier();
+      calcDelais();
+      updateMiniStats();
+    }
+
+    async function save(){
+      const payload = {
+        numero: el("numero").value,
+        article: el("article").value,
+        taille: el("taille").value,
+        modele: el("modele").value,
+        couleur: el("couleur").value,
+        date_ha: el("date_ha").value || null,
+        date_mise_en_ligne: el("date_mise_en_ligne").value || null,
+        date_vente: el("date_vente").value || null,
+        qui: el("qui").value,
+        prix_ha: el("prix_ha").value === "" ? null : Number(el("prix_ha").value),
+        ca_encaisse: el("ca_encaisse").value === "" ? null : Number(el("ca_encaisse").value),
+
+        // Marge (base) : si CA encaissé > 0 => CA - PrixHA sinon 0
+        marge: (() => {
+          const prix = Number(el("prix_ha").value);
+          const ca = Number(el("ca_encaisse").value);
+          return (isFinite(prix) && isFinite(ca) && ca > 0) ? (ca - prix) : 0;
+        })(),
+
+        // Coef marge (base) : CA / PrixHA si possible sinon 0
+        coef_marge: (() => {
+          const prix = Number(el("prix_ha").value);
+          const ca = Number(el("ca_encaisse").value);
+          return (isFinite(prix) && isFinite(ca) && ca > 0 && prix > 0) ? (ca / prix) : 0;
+        })(),
+
+        prix_en_ligne: el("prix_en_ligne") && el("prix_en_ligne").value !== "" ? Number(el("prix_en_ligne").value) : null,
+        coef_en_ligne: el("coef_en_ligne") && el("coef_en_ligne").value !== "" ? Number(el("coef_en_ligne").value) : null,
+        marge_en_ligne: el("marge_en_ligne") && el("marge_en_ligne").value !== "" ? Number(el("marge_en_ligne").value) : null,
+        frais_vinted_livraison: el("frais_vinted_livraison") && el("frais_vinted_livraison").value !== "" ? Number(el("frais_vinted_livraison").value) : null,
+
+        client_id: el("client_id").value,
+        date_recep: el("date_recep").value || null
+      };
+
+      // Create
+      if (!recordId){
+        const ins = await sb.from("ListeProduit").insert(payload).select("id").single();
+        if (ins.error){
+          alert("Création impossible : " + ins.error.message);
+          return;
+        }
+        recordId = String(ins.data.id);
+        __params.set("id", recordId);
+        setLast("Article créé");
+        setDirty(false);
+
+        // After creation: switch to edit mode and enable photos/delete
+        setMode("edit");
+        await loadProduct();
+        await loadPhotos();
+        alert("Créé");
+        return;
+      }
+
+      // Update
+      const r = await sb.from("ListeProduit").update(payload).eq("id", Number(recordId));
+      if (r.error){
+        alert("Enregistrement impossible : " + r.error.message);
+        return;
+      }
+
+      setLast("Article enregistré");
+      setDirty(false);
+      alert("Enregistré");
+    }
+
+    
+    async function duplicateArticle(){
+      if (!recordId){
+        alert("Impossible de dupliquer : aucun article chargé.");
+        return;
+      }
+      if (!confirm("Dupliquer cet article ? (les photos ne sont pas copiées)")) return;
+
+      // On repart des valeurs actuelles du formulaire (même en mode view, elles sont lisibles)
+      const prixHA = (el("prix_ha").value === "" ? 0 : Number(el("prix_ha").value));
+      const prixEnLigne = (el("prix_en_ligne") && el("prix_en_ligne").value !== "" ? Number(el("prix_en_ligne").value) : null);
+      const coefEnLigne = (el("coef_en_ligne") && el("coef_en_ligne").value !== "" ? Number(el("coef_en_ligne").value) : null);
+      const margeEnLigne = (el("marge_en_ligne") && el("marge_en_ligne").value !== "" ? Number(el("marge_en_ligne").value) : null);
+      const fraisVintedLivraison = (el("frais_vinted_livraison") && el("frais_vinted_livraison").value !== "" ? Number(el("frais_vinted_livraison").value) : null);
+
+      // Par défaut, on duplique l'identité + prix d'achat + paramètres "en ligne"
+      // et on remet à zéro ce qui dépend d'une vente réelle.
+      const payload = {
+        numero: "", // on force vide pour éviter les doublons, tu peux le saisir ensuite
+        article: el("article").value,
+        taille: el("taille").value,
+        modele: el("modele").value,
+        couleur: el("couleur").value,
+        qui: el("qui").value,
+
+        // Achat conservé, mais on remet les dates à null (à adapter si tu veux garder date_ha)
+        date_ha: el("date_ha").value || null,
+        date_mise_en_ligne: null,
+        date_vente: null,
+        date_recep: null,
+        client_id: "",
+
+        prix_ha: (isFinite(prixHA) ? prixHA : null),
+
+        // Vente réelle remise à 0
+        ca_encaisse: 0,
+        marge: 0,
+        coef_marge: 0,
+
+        // Champs "en ligne" conservés
+        prix_en_ligne: (isFinite(prixEnLigne) ? prixEnLigne : null),
+        coef_en_ligne: (isFinite(coefEnLigne) ? coefEnLigne : null),
+        marge_en_ligne: (isFinite(margeEnLigne) ? margeEnLigne : null),
+        frais_vinted_livraison: (isFinite(fraisVintedLivraison) ? fraisVintedLivraison : null)
+      };
+
+      const ins = await sb.from("ListeProduit").insert(payload).select("id").single();
+      if (ins.error){
+        alert("Duplication impossible : " + ins.error.message);
+        return;
+      }
+
+      // Ouvrir le nouvel article directement en édition
+      const newId = String(ins.data.id);
+      window.location.href = `modificationarticle.html?id=${encodeURIComponent(newId)}&mode=edit`;
+    }
+
+async function deleteArticle(){
+      if (!confirm("Supprimer cet article ?")) return;
+      const r = await sb.from("ListeProduit").delete().eq("id", Number(recordId));
+      if (r.error){
+        alert("Suppression impossible : " + r.error.message);
+        return;
+      }
+      location.href = "articles.html";
+    }
+
+    // Upload photo (first photo => is_main true)
+    el("photoInput").addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const path = `articles/${recordId}/${Date.now()}_${file.name}`;
+
+      const up = await sb.storage.from("Article-photos").upload(path, file);
+      if (up.error){
+        alert("Upload impossible : " + up.error.message);
+        return;
+      }
+
+      const c = await sb.from("article_photos")
+        .select("*", { count: "exact", head: true })
+        .eq("article_id", Number(recordId));
+
+      if (c.error){
+        alert("Erreur vérification photos : " + c.error.message);
+        return;
+      }
+
+      const isMain = (c.count === 0);
+
+      const ins = await sb.from("article_photos").insert({
+        article_id: Number(recordId),
+        path: path,
+        is_main: isMain,
+        sort_order: 0
+      });
+
+      if (ins.error){
+        alert("Insert photo impossible : " + ins.error.message);
+        return;
+      }
+
+      setLast(isMain ? "Photo ajoutée (principale)" : "Photo ajoutée");
+      setDirty(true);
+      e.target.value = "";
+      await loadPhotos();
+    });
+
+    // Wire buttons
+    el("saveBtn").addEventListener("click", save);
+    el("toggleModeBtn").addEventListener("click", () => {
+      if (mode === "view") setMode("edit");
+      else if (recordId) setMode("view");
+    });
+    el("duplicateBtn").addEventListener("click", duplicateArticle);
+    el("backBtn").addEventListener("click", () => {
+      if (hasChanges){
+        if (!confirm("Des modifications ne sont pas enregistrées. Quitter quand même ?")) return;
+      }
+      if (history.length > 1) history.back();
+      else location.href = "articles.html";
+    });
+    el("deleteBtn").addEventListener("click", deleteArticle);
+
+    // Track changes + trigger recalculations
+    function wireRecalcs(){
+      ["prix_ha","ca_encaisse"].forEach(id => el(id).addEventListener("input", () => {
+        calcFinancier();
+        updateMiniStats();
+      }));
+      ["date_ha","date_mise_en_ligne","date_vente"].forEach(id => el(id).addEventListener("input", () => {
+        calcDelais();
+        updateStatus();
+        updateMiniStats();
+      }));
+    }
+
+    (async function main(){
+      await requireSession();
+
+      // Apply mode UI now
+      applyModeUI();
+
+      wireDirtyTracking();
+      wireRecalcs();
+      wireLineRecalcs();
+
+      if (recordId){
+        await loadProduct();
+        await loadPhotos();
+      } else {
+        initNewForm();
+      }
+
+      setLast("Page chargée");
+      setDirty(false);
+    })();
+  </script>
+</body>
+</html>
